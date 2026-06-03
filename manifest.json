@@ -1,8 +1,8 @@
 {
-  "name": "UnXDfy",
-  "id": "unxdfy-plugin",
+  "name": "XDtox",
+  "id": "xdtox-plugin",
   "api": "1.0.0",
-  "main": "code.js",
-  "ui": "ui.html",
+  "main": "dist/code.js",
+  "ui": "dist/ui.html",
   "editorType": ["figma"]
 }
