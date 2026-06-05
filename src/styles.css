@@ -39,13 +39,25 @@
 
   /* Frame list rows */
   .frame-item {
-    @apply flex items-center gap-2 px-3.5 py-1.5 text-[10px] text-stone-500;
+    @apply flex items-center gap-2 px-3.5 py-1.5 text-[10px] text-stone-500 transition-colors;
   }
-  .frame-item::before {
-    content: '·';
-    @apply text-stone-300 shrink-0;
+
+  /* Per-row status glyph (replaces the old ::before bullet) */
+  .frame-status {
+    @apply shrink-0 w-3 text-center text-stone-300 font-mono leading-none;
   }
+  .frame-item[data-status="in-progress"] .frame-status { @apply text-stone-500; }
+  .frame-item[data-status="done"] { @apply text-stone-700; }
+  .frame-item[data-status="done"] .frame-status { @apply text-emerald-500; }
+  .frame-item[data-status="skipped"] .frame-status { @apply text-amber-500; }
+  .frame-item[data-status="error"] { @apply text-red-500; }
+  .frame-item[data-status="error"] .frame-status { @apply text-red-500; }
 }
+
+/* ── Per-frame spinner ────────────────────────────────────────────────────── */
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { display: inline-block; animation: spin 0.7s linear infinite; }
 
 /* ── Scrollbar ────────────────────────────────────────────────────────────── */
 
