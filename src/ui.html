@@ -43,32 +43,67 @@
 <div class="page active" id="pageMain">
 
   <!-- ── Initial view ── -->
-  <div id="viewInitial" class="flex-1 flex flex-col px-5 py-4 gap-4">
+  <div id="viewInitial" class="flex flex-col flex-1 min-h-0">
 
-    <!-- Scope -->
-    <div class="flex flex-col gap-1.5">
-      <span class="text-[9px] uppercase tracking-widest text-stone-400">Scope</span>
-      <div class="flex rounded border border-stone-300 overflow-hidden bg-stone-200 p-0.5 gap-0.5">
-        <button id="scopePage" class="scope-btn active" onclick="setScope('page')">This page</button>
-        <button id="scopeFile" class="scope-btn" onclick="setScope('file')">Whole file</button>
+    <!-- Hero / intro — fills the space and centers -->
+    <div class="flex-1 flex flex-col items-center justify-center text-center gap-3 px-5 min-h-0">
+      <div class="w-11 h-11 rounded-sm border border-stone-200 flex items-center justify-center text-red-500 font-mono text-[20px]">✶</div>
+      <div class="flex flex-col gap-1.5 items-center">
+        <span class="font-display font-bold text-[15px] text-stone-700">Strip XD import artifacts</span>
+        <span class="text-[10px] text-stone-400 leading-relaxed px-6">Find Figma frames wrapped in Adobe XD clip groups and clean them in one pass.</span>
       </div>
     </div>
 
-    <!-- Find button -->
-    <button id="btnFind" onclick="doFind()"
-      class="w-full border border-stone-300 text-stone-700 font-mono text-[10px] uppercase
-             tracking-widest px-4 py-2.5 flex items-center justify-center gap-2 cursor-pointer
-             transition-colors hover:border-stone-500 hover:text-stone-900 bg-white">
-      <span id="findLabel">Find</span>
-    </button>
+    <!-- Pinned actions: scope + find -->
+    <div class="px-5 pb-4 pt-2 flex flex-col gap-3 shrink-0">
+      <!-- Scope -->
+      <div class="flex flex-col gap-1.5">
+        <span class="text-[9px] uppercase tracking-widest text-stone-400">Scope</span>
+        <div class="flex rounded border border-stone-300 overflow-hidden bg-stone-200 p-0.5 gap-0.5">
+          <button id="scopePage" class="scope-btn active" onclick="setScope('page')">This page</button>
+          <button id="scopeFile" class="scope-btn" onclick="setScope('file')">Whole file</button>
+        </div>
+      </div>
 
+      <!-- Find button -->
+      <button id="btnFind" onclick="doFind()"
+        class="w-full border border-stone-300 text-stone-700 font-mono text-[10px] uppercase
+               tracking-widest px-4 py-2.5 flex items-center justify-center gap-2 cursor-pointer
+               transition-colors hover:border-stone-500 hover:text-stone-900 bg-white">
+        <span id="findLabel">Find</span>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ── Scanning view ── -->
+  <div id="viewScanning" class="hidden flex-1 flex flex-col px-5 py-4 gap-3 justify-center">
+    <span class="text-[9px] uppercase tracking-widest text-stone-400">Scanning</span>
+
+    <!-- Current node under inspection -->
+    <div class="border border-stone-200 bg-white px-3.5 py-3 flex items-center gap-2 min-h-[46px]">
+      <span id="scanArrow" class="text-stone-300 shrink-0 font-mono">›</span>
+      <span id="scanCurrent"
+        class="scanning flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-[11px] text-stone-700">…</span>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="h-1 bg-stone-200 rounded-sm overflow-hidden">
+      <div id="scanBar" class="h-full bg-red-600 transition-all duration-100" style="width:0%"></div>
+    </div>
+
+    <!-- Counters -->
+    <div class="flex items-center justify-between text-[9px] uppercase tracking-widest">
+      <span id="scanCount" class="text-stone-400">0 / 0</span>
+      <span id="scanFound" class="text-stone-400 font-bold">0 found</span>
+    </div>
   </div>
 
   <!-- ── Results view ── -->
   <div id="viewResults" class="hidden flex flex-col flex-1 min-h-0">
 
     <!-- Count heading -->
-    <div class="px-5 pt-4 pb-2 shrink-0">
+    <div id="resultsHeadingWrap" class="px-5 pt-4 pb-2 shrink-0">
       <span id="resultsHeading" class="font-display font-bold text-[18px] leading-none tracking-tight text-stone-900"></span>
     </div>
 
@@ -79,6 +114,8 @@
 
     <!-- Stacked action buttons -->
     <div class="px-5 pb-4 flex flex-col gap-2 shrink-0">
+      <div id="stripSummary"
+        class="hidden text-[10px] text-center px-3.5 py-3 rounded-sm border leading-relaxed"></div>
       <button id="btnStrip" onclick="doStrip()"
         class="w-full bg-red-600 text-white font-display font-bold text-[13px] tracking-tight
                px-5 py-3.5 flex items-center justify-between cursor-pointer
@@ -97,22 +134,8 @@
 
   </div>
 
-  <!-- ── Done view ── -->
-  <div id="viewDone" class="hidden flex-1 flex flex-col px-5 py-4 gap-4">
-    <div id="doneBadge"
-      class="bg-emerald-50 border border-emerald-100 text-emerald-700 text-[10px]
-             px-3.5 py-3 text-center leading-relaxed rounded-sm">
-    </div>
-    <button onclick="doSearchAgain()"
-      class="w-full border border-stone-300 text-stone-600 font-mono text-[10px] uppercase
-             tracking-widest px-4 py-2.5 flex items-center justify-center cursor-pointer
-             transition-colors hover:border-stone-500 hover:text-stone-900 bg-white">
-      Search again
-    </button>
-  </div>
-
   <footer class="px-5 py-2 border-t border-stone-200 bg-white flex items-center shrink-0">
-    <span class="text-[9px] text-stone-400 tracking-wide">v1.1</span>
+    <span class="text-[9px] text-stone-400 tracking-wide">v1.3</span>
     <span class="ml-auto text-[9px] text-stone-400">
       <a href="https://alekslinde.com" target="_blank"
          class="hover:text-stone-500 transition-colors" style="text-decoration:none;color:inherit">
@@ -178,7 +201,7 @@
   </div>
 
   <footer class="px-5 py-2 border-t border-stone-200 bg-white flex items-center shrink-0">
-    <span class="text-[9px] text-stone-400 tracking-wide">v1.1</span>
+    <span class="text-[9px] text-stone-400 tracking-wide">v1.3</span>
     <span class="ml-auto text-[9px] text-stone-400">
       <a href="https://alekslinde.com" target="_blank"
          class="hover:text-stone-500 transition-colors" style="text-decoration:none;color:inherit">
@@ -198,6 +221,10 @@
 <script>
   var scanResult = null;
   var currentScope = 'page';
+
+  // Frame list styling: bordered/scrolling when populated, centered when empty.
+  var LIST_CLASS_FULL  = 'flex-1 overflow-y-auto mx-5 mb-3 border border-stone-200 bg-white divide-y divide-stone-100 min-h-0';
+  var LIST_CLASS_EMPTY = 'flex-1 mx-5 mb-3 flex flex-col items-center justify-center text-center gap-3 min-h-0';
 
   function setScope(s) {
     currentScope = s;
@@ -222,7 +249,7 @@
   }
 
   function showView(name) {
-    ['viewInitial', 'viewResults', 'viewDone'].forEach(function(id) {
+    ['viewInitial', 'viewScanning', 'viewResults'].forEach(function(id) {
       var el = document.getElementById(id);
       if (id === name) {
         el.classList.remove('hidden');
@@ -237,6 +264,17 @@
   function doFind() {
     document.getElementById('findLabel').textContent = 'Finding…';
     document.getElementById('btnFind').disabled = true;
+
+    // Reset and show the live scanning view.
+    document.getElementById('scanCurrent').textContent = 'Reading document…';
+    document.getElementById('scanCurrent').className =
+      'scanning flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-[11px] text-stone-700';
+    document.getElementById('scanBar').style.width = '0%';
+    document.getElementById('scanCount').textContent = '0 / 0';
+    document.getElementById('scanFound').textContent = '0 found';
+    document.getElementById('scanFound').className = 'text-stone-400 font-bold';
+    showView('viewScanning');
+
     parent.postMessage({ pluginMessage: { type: 'scan', scope: currentScope } }, '*');
   }
 
@@ -244,14 +282,28 @@
     scanResult = null;
     document.getElementById('findLabel').textContent = 'Find';
     document.getElementById('btnFind').disabled = false;
+    document.getElementById('stripSummary').classList.add('hidden');
+    document.getElementById('btnStrip').classList.remove('hidden');
     showView('viewInitial');
   }
 
   function doStrip() {
-    if (!scanResult) return;
-    parent.postMessage({
-      pluginMessage: { type: 'strip', scope: currentScope, useSelection: scanResult.mode === 'selection' }
-    }, '*');
+    if (!scanResult || !scanResult.frames || !scanResult.frames.length) return;
+    var ids = scanResult.frames.map(function(f) { return f.id; });
+
+    // Reset every row to a queued state and disable interaction.
+    ids.forEach(function(id) {
+      var row = document.getElementById('row-' + id);
+      var st  = document.getElementById('st-' + id);
+      if (row) { row.setAttribute('data-status', 'queued'); row.removeAttribute('title'); }
+      if (st)  { st.textContent = '·'; }
+    });
+
+    var btn = document.getElementById('btnStrip');
+    btn.disabled = true;
+    document.getElementById('stripLabel').textContent = 'Stripping…';
+
+    parent.postMessage({ pluginMessage: { type: 'strip', ids: ids } }, '*');
   }
 
   function doLocate(nodeId) {
@@ -262,26 +314,71 @@
     var msg = event.data.pluginMessage;
     if (!msg) return;
 
+    if (msg.type === 'scan-start') {
+      document.getElementById('scanCount').textContent = '0 / ' + msg.total;
+      if (msg.total === 0) {
+        document.getElementById('scanCurrent').textContent = 'Nothing to scan…';
+        document.getElementById('scanCurrent').classList.remove('scanning');
+      }
+    }
+
+    if (msg.type === 'scan-progress') {
+      var cur = document.getElementById('scanCurrent');
+      cur.textContent = msg.name;
+      // Briefly tint matched frames so hits stand out as they fly by.
+      cur.className = 'scanning flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-[11px] ' +
+        (msg.hit ? 'text-emerald-600 font-bold' : 'text-stone-700');
+      document.getElementById('scanArrow').textContent = msg.hit ? '✓' : '›';
+
+      var pct = msg.total ? Math.round(msg.index / msg.total * 100) : 100;
+      document.getElementById('scanBar').style.width = pct + '%';
+      document.getElementById('scanCount').textContent = msg.index + ' / ' + msg.total;
+
+      var found = document.getElementById('scanFound');
+      found.textContent = msg.found + ' found';
+      found.className = msg.found > 0 ? 'text-red-600 font-bold' : 'text-stone-400 font-bold';
+    }
+
     if (msg.type === 'scan-result') {
       scanResult = msg;
+      document.getElementById('scanArrow').textContent = '›';
       document.getElementById('findLabel').textContent = 'Find';
       document.getElementById('btnFind').disabled = false;
 
       var heading = document.getElementById('resultsHeading');
+      var headingWrap = document.getElementById('resultsHeadingWrap');
       var list    = document.getElementById('frameList');
       var stripBtn = document.getElementById('btnStrip');
       var stripLabel = document.getElementById('stripLabel');
 
+      // Reset action area in case we are returning from a previous strip run.
+      stripBtn.classList.remove('hidden');
+      document.getElementById('stripSummary').classList.add('hidden');
+
       if (msg.count === 0) {
-        heading.textContent = 'No frames found';
-        list.innerHTML = '';
-        list.classList.add('hidden');
-        stripBtn.disabled = true;
+        // Empty state fills the list area so the actions stay pinned to the bottom.
+        headingWrap.classList.add('hidden');
+        stripBtn.classList.add('hidden');
+        list.className = LIST_CLASS_EMPTY;
+
+        var where = msg.mode === 'selection'
+          ? 'None of the selected frames'
+          : (msg.mode === 'file' ? 'Nothing in this file' : 'Nothing on this page');
+
+        list.innerHTML =
+          '<div class="w-11 h-11 rounded-sm border border-stone-200 flex items-center justify-center text-stone-300 font-mono text-[20px]">∅</div>' +
+          '<div class="flex flex-col gap-1.5 items-center">' +
+            '<span class="font-display font-bold text-[15px] text-stone-700">No XD frames found</span>' +
+            '<span class="text-[10px] text-stone-400 leading-relaxed px-6">' + where + ' needs stripping. ' +
+              'Try the “Whole file” scope or a different selection.</span>' +
+          '</div>';
       } else {
+        headingWrap.classList.remove('hidden');
         heading.textContent = msg.count + ' frame' + (msg.count !== 1 ? 's' : '') + ' found';
-        list.classList.remove('hidden');
+        list.className = LIST_CLASS_FULL;
         list.innerHTML = msg.frames.map(function(f) {
-          return '<div class="frame-item">' +
+          return '<div class="frame-item" data-status="idle" id="row-' + escAttr(f.id) + '">' +
+            '<span class="frame-status" id="st-' + escAttr(f.id) + '">·</span>' +
             '<span class="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">' + escHtml(f.name) + '</span>' +
             '<button onclick="doLocate(\'' + escAttr(f.id) + '\')" title="Locate on canvas"' +
             ' class="shrink-0 ml-2 text-stone-400 hover:text-stone-700 transition-colors border-none bg-transparent cursor-pointer px-1 py-0 font-mono text-[22px] leading-none">' +
@@ -295,14 +392,40 @@
       showView('viewResults');
     }
 
+    if (msg.type === 'strip-progress') {
+      var row = document.getElementById('row-' + msg.id);
+      var st  = document.getElementById('st-' + msg.id);
+      if (row) {
+        row.setAttribute('data-status', msg.status);
+        if (msg.reason) row.title = msg.reason; else row.removeAttribute('title');
+        row.scrollIntoView({ block: 'nearest' });
+      }
+      if (st) {
+        if (msg.status === 'in-progress')   st.innerHTML = '<span class="spin">◌</span>';
+        else if (msg.status === 'done')     st.textContent = '✓';
+        else if (msg.status === 'error')    st.textContent = '✕';
+        else if (msg.status === 'skipped')  st.textContent = '–';
+        else                                st.textContent = '·';
+      }
+    }
+
     if (msg.type === 'done') {
-      var badge = document.getElementById('doneBadge');
-      badge.textContent = msg.stripped > 0
-        ? '✓ Stripped ' + msg.stripped + ' frame' + (msg.stripped !== 1 ? 's' : '') +
-          (msg.skipped > 0 ? ' · skipped ' + msg.skipped : '')
-        : '✕ No matching frames found.';
+      var stripBtn2 = document.getElementById('btnStrip');
+      var summary   = document.getElementById('stripSummary');
+      stripBtn2.classList.add('hidden');
+
+      var parts = [];
+      parts.push('✓ ' + msg.stripped + ' stripped');
+      if (msg.skipped) parts.push(msg.skipped + ' skipped');
+      if (msg.errored) parts.push(msg.errored + ' failed');
+
+      var ok = !msg.errored;
+      summary.textContent = parts.join('  ·  ');
+      summary.className = 'text-[10px] text-center px-3.5 py-3 rounded-sm border leading-relaxed ' +
+        (ok ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
+            : 'bg-red-50 border-red-100 text-red-700');
+
       scanResult = null;
-      showView('viewDone');
     }
   };
 
