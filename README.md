@@ -2,8 +2,6 @@
 
 A Figma plugin that strips Adobe XD SVG import artifacts — redundant wrapper groups, clip mask nodes, and background vector paths — from frames in one click.
 
-**By [Aleks Linde](https://alekslinde.com) · MIT License**
-
 ---
 
 ## What it does
