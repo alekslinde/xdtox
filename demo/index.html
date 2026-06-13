@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>XDtox – Demo / Screenshot Mode</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet"/>
+  <style>/* INLINE_CSS */</style>
+  <style>
+    /* Demo-specific styles */
+    body { margin: 0; padding: 20px; background: #f5f5f5; }
+    .demo-container {
+      max-width: 420px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    #uiFrame {
+      width: 100%;
+      height: 600px;
+      border: none;
+    }
+    .demo-controls {
+      display: flex;
+      gap: 8px;
+      padding: 16px;
+      background: #f9f9f9;
+      border-top: 1px solid #e5e5e5;
+      flex-wrap: wrap;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    .demo-btn {
+      padding: 8px 16px;
+      border: 1px solid #ddd;
+      background: white;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-family: monospace;
+      transition: all 0.2s;
+    }
+    .demo-btn:hover {
+      background: #f0f0f0;
+      border-color: #999;
+    }
+    .demo-btn.active {
+      background: #dc2626;
+      color: white;
+      border-color: #991b1b;
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-container">
+    <iframe id="uiFrame"></iframe>
+  </div>
+
+  <div class="demo-controls">
+    <button class="demo-btn" onclick="loadInitialView()">Initial View</button>
+    <button class="demo-btn" onclick="loadScanningView()">Scanning</button>
+    <button class="demo-btn" onclick="loadResultsView()">Results (5 frames)</button>
+    <button class="demo-btn" onclick="loadEmptyResultsView()">Results (empty)</button>
+    <button class="demo-btn" onclick="loadStrippingView()">Stripping Progress</button>
+    <button class="demo-btn" onclick="loadDoneView()">Done View</button>
+  </div>
+
+  <script>
+    const mockFrames = [
+      { id: 'frame-1', name: 'Hero Section' },
+      { id: 'frame-2', name: 'Product Card' },
+      { id: 'frame-3', name: 'Navigation Bar' },
+      { id: 'frame-4', name: 'Footer Content' },
+      { id: 'frame-5', name: 'Modal Dialog' },
+    ];
+
+    function loadUIInFrame(setupCallback) {
+      const frame = document.getElementById('uiFrame');
+
+      const onLoad = () => {
+        frame.removeEventListener('load', onLoad);
+        if (setupCallback) setupCallback(frame.contentWindow);
+      };
+
+      frame.addEventListener('load', onLoad);
+      frame.src = '../dist/ui.html';
+    }
+
+    function loadInitialView() {
+      loadUIInFrame(() => {
+        // Initial view is already shown by default
+        console.log('Initial view loaded');
+      });
+    }
+
+    function loadScanningView() {
+      loadUIInFrame((iframeWindow) => {
+        setTimeout(() => {
+          iframeWindow.postMessage({
+            pluginMessage: { type: 'scan-start', total: 42 }
+          }, '*');
+
+          // Simulate progress up to 50% (21 of 42 frames scanned, 3 found)
+          const names = ['Board', 'Section', 'Header', 'Card A', 'Card B'];
+          const total = 42;
+          const stopAt = Math.floor(total / 2); // 21
+          let scanned = 0;
+          let found = 0;
+          const progressInterval = setInterval(() => {
+            if (scanned < stopAt) {
+              const hit = Math.random() > 0.7;
+              if (hit) found++;
+              scanned += 3;
+              iframeWindow.postMessage({
+                pluginMessage: {
+                  type: 'scan-progress',
+                  index: scanned,
+                  total,
+                  name: names[Math.floor(Math.random() * names.length)],
+                  hit,
+                  found,
+                }
+              }, '*');
+            } else {
+              clearInterval(progressInterval);
+            }
+          }, 150);
+        }, 100);
+      });
+    }
+
+    function loadResultsView() {
+      loadUIInFrame((iframeWindow) => {
+        setTimeout(() => {
+          iframeWindow.postMessage({
+            pluginMessage: {
+              type: 'scan-result',
+              count: mockFrames.length,
+              mode: 'page',
+              frames: mockFrames,
+            }
+          }, '*');
+        }, 100);
+      });
+    }
+
+    function loadEmptyResultsView() {
+      loadUIInFrame((iframeWindow) => {
+        setTimeout(() => {
+          iframeWindow.postMessage({
+            pluginMessage: {
+              type: 'scan-result',
+              count: 0,
+              mode: 'page',
+              frames: [],
+            }
+          }, '*');
+        }, 100);
+      });
+    }
+
+    function loadStrippingView() {
+      loadUIInFrame((iframeWindow) => {
+        setTimeout(() => {
+          // First load results
+          iframeWindow.postMessage({
+            pluginMessage: {
+              type: 'scan-result',
+              count: mockFrames.length,
+              mode: 'page',
+              frames: mockFrames,
+            }
+          }, '*');
+
+          // Then simulate strip progress
+          setTimeout(() => {
+            const statuses = ['in-progress', 'done', 'done', 'error', 'skipped'];
+            mockFrames.forEach((frame, idx) => {
+              setTimeout(() => {
+                const status = statuses[Math.min(idx, statuses.length - 1)];
+                const reasons = {
+                  error: 'Structure changed during strip',
+                  skipped: 'Already clean',
+                };
+
+                iframeWindow.postMessage({
+                  pluginMessage: {
+                    type: 'strip-progress',
+                    id: frame.id,
+                    status: status,
+                    reason: reasons[status] || undefined,
+                  }
+                }, '*');
+              }, idx * 250);
+            });
+          }, 500);
+        }, 100);
+      });
+    }
+
+    function loadDoneView() {
+      loadUIInFrame((iframeWindow) => {
+        setTimeout(() => {
+          // First load results
+          iframeWindow.postMessage({
+            pluginMessage: {
+              type: 'scan-result',
+              count: mockFrames.length,
+              mode: 'page',
+              frames: mockFrames,
+            }
+          }, '*');
+
+          // Then quickly finish
+          setTimeout(() => {
+            mockFrames.forEach((frame, idx) => {
+              iframeWindow.postMessage({
+                pluginMessage: {
+                  type: 'strip-progress',
+                  id: frame.id,
+                  status: idx < 3 ? 'done' : (idx === 3 ? 'error' : 'skipped'),
+                  reason: idx === 3 ? 'Structure changed' : undefined,
+                }
+              }, '*');
+            });
+
+            setTimeout(() => {
+              iframeWindow.postMessage({
+                pluginMessage: {
+                  type: 'done',
+                  stripped: 3,
+                  skipped: 1,
+                  errored: 1,
+                }
+              }, '*');
+            }, 500);
+          }, 300);
+        }, 100);
+      });
+    }
+
+    // Load initial view on page load
+    window.addEventListener('load', () => {
+      loadInitialView();
+    });
+  </script>
+</body>
+</html>
