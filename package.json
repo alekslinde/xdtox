@@ -6,7 +6,8 @@
     "build:css": "tailwindcss -i src/styles.css -o dist/styles.css --minify",
     "build": "npm run build:css && node scripts/build.js",
     "dev": "tailwindcss -i src/styles.css -o dist/styles.css --watch",
-    "test": "jest"
+    "test": "jest",
+    "cache-buster": "node scripts/get-cache-buster.js"
   },
   "devDependencies": {
     "esbuild": "^0.28.0",
