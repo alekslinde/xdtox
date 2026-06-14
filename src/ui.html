@@ -315,7 +315,12 @@
     if (!msg) return;
 
     if (msg.type === 'scan-start') {
+      document.getElementById('scanCurrent').textContent = 'Reading document…';
+      document.getElementById('scanBar').style.width = '0%';
       document.getElementById('scanCount').textContent = '0 / ' + msg.total;
+      document.getElementById('scanFound').textContent = '0 found';
+      document.getElementById('scanFound').className = 'text-stone-400 font-bold';
+      showView('viewScanning');
       if (msg.total === 0) {
         document.getElementById('scanCurrent').textContent = 'Nothing to scan…';
         document.getElementById('scanCurrent').classList.remove('scanning');
