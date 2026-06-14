@@ -15,7 +15,6 @@
 <header class="flex items-center gap-3 px-5 py-4 border-b border-stone-200 bg-white shrink-0">
   <!-- Main header -->
   <div id="headerMain" class="flex items-center gap-3 w-full">
-    <!-- <div class="w-2 h-2 rounded-sm bg-red-600 shrink-0 mt-px"></div> -->
     <div class="flex-1 min-w-0">
       <span class="font-display font-extrabold text-[15px] leading-none tracking-tight text-stone-900">XDtox</span>
       <span class="text-stone-400 mx-1.5">·</span>
@@ -24,7 +23,7 @@
     <button onclick="showHelp()" title="How it works"
       class="text-[10px] text-stone-500 font-mono font-bold cursor-pointer bg-transparent
              border border-stone-300 rounded-sm w-5 h-5 flex items-center justify-center
-             hover:border-red-500 hover:text-red-600 transition-colors">
+             hover:border-stone-500 hover:text-stone-900 transition-colors">
       ?
     </button>
   </div>
@@ -47,10 +46,10 @@
 
     <!-- Hero / intro — fills the space and centers -->
     <div class="flex-1 flex flex-col items-center justify-center text-center gap-3 px-5 min-h-0">
-      <div class="w-11 h-11 rounded-sm border border-stone-200 flex items-center justify-center text-red-500 font-mono text-[20px]">✶</div>
+      <div class="w-11 h-11 rounded-sm border border-stone-200 flex items-center justify-center text-stone-700 font-mono text-[20px]">✶</div>
       <div class="flex flex-col gap-1.5 items-center">
         <span class="font-display font-bold text-[15px] text-stone-700">Strip XD import artifacts</span>
-        <span class="text-[10px] text-stone-400 leading-relaxed px-6">Find Figma frames wrapped in Adobe XD clip groups and clean them in one pass.</span>
+        <span class="text-[10px] text-stone-500 leading-relaxed px-6">Find Figma frames wrapped in Adobe XD clip groups and clean them in one pass.</span>
       </div>
     </div>
 
@@ -58,7 +57,7 @@
     <div class="px-5 pb-4 pt-2 flex flex-col gap-3 shrink-0">
       <!-- Scope -->
       <div class="flex flex-col gap-1.5">
-        <span class="text-[9px] uppercase tracking-widest text-stone-400">Scope</span>
+        <span class="text-[9px] uppercase tracking-widest text-stone-500">Scope</span>
         <div class="flex rounded border border-stone-300 overflow-hidden bg-stone-200 p-0.5 gap-0.5">
           <button id="scopePage" class="scope-btn active" onclick="setScope('page')">This page</button>
           <button id="scopeFile" class="scope-btn" onclick="setScope('file')">Whole file</button>
@@ -77,25 +76,34 @@
   </div>
 
   <!-- ── Scanning view ── -->
-  <div id="viewScanning" class="hidden flex-1 flex flex-col px-5 py-4 gap-3 justify-center">
-    <span class="text-[9px] uppercase tracking-widest text-stone-400">Scanning</span>
+  <div id="viewScanning" class="hidden flex-1 flex flex-col min-h-0">
 
-    <!-- Current node under inspection -->
-    <div class="border border-stone-200 bg-white px-3.5 py-3 flex items-center gap-2 min-h-[46px]">
-      <span id="scanArrow" class="text-stone-300 shrink-0 font-mono">›</span>
-      <span id="scanCurrent"
-        class="scanning flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-[11px] text-stone-700">…</span>
+    <!-- Title -->
+    <div class="px-5 pt-4 pb-2 shrink-0">
+      <span class="font-display font-bold text-[18px] leading-none tracking-tight text-stone-900">Scan in progress</span>
     </div>
 
-    <!-- Progress bar -->
-    <div class="h-1 bg-stone-200 rounded-sm overflow-hidden">
-      <div id="scanBar" class="h-full bg-red-600 transition-all duration-100" style="width:0%"></div>
+    <!-- Live hit list — same structure as results, populates in real-time -->
+    <div id="scanList"
+      class="flex-1 overflow-y-auto mx-5 mb-0 border border-stone-200 bg-white divide-y divide-stone-100 min-h-0">
     </div>
 
-    <!-- Counters -->
-    <div class="flex items-center justify-between text-[9px] uppercase tracking-widest">
-      <span id="scanCount" class="text-stone-400">0 / 0</span>
-      <span id="scanFound" class="text-stone-400 font-bold">0 found</span>
+    <!-- Pinned: progress bar + counters + pause -->
+    <div class="px-5 pb-4 pt-3 flex flex-col gap-2 shrink-0">
+      <div class="h-1 bg-stone-200 rounded-sm overflow-hidden">
+        <div id="scanBar" class="h-full bg-stone-800 transition-all duration-100" style="width:0%"></div>
+      </div>
+      <div class="py-2.5 flex items-center justify-between text-[9px] uppercase tracking-widest">
+        <span id="scanCount" class="text-stone-500">0 / 0</span>
+        <span id="scanFound" class="text-stone-500 font-bold">0 found</span>
+      </div>
+
+      <button id="btnPause" onclick="doPause()"
+        class="w-full border border-stone-300 text-stone-600 font-mono text-[10px] uppercase
+               tracking-widest px-4 py-2.5 flex items-center justify-center cursor-pointer
+               transition-colors hover:border-stone-500 hover:text-stone-900 bg-white">
+        Pause
+      </button>
     </div>
   </div>
 
@@ -116,14 +124,16 @@
     <div class="px-5 pb-4 flex flex-col gap-2 shrink-0">
       <div id="stripSummary"
         class="hidden text-[10px] text-center px-3.5 py-3 rounded-sm border leading-relaxed"></div>
+
       <button id="btnStrip" onclick="doStrip()"
-        class="w-full bg-red-600 text-white font-display font-bold text-[13px] tracking-tight
+        class="w-full bg-stone-900 text-white font-display font-bold text-[13px] tracking-tight
                px-5 py-3.5 flex items-center justify-between cursor-pointer
-               transition-colors hover:bg-red-700
+               transition-colors hover:bg-stone-700
                disabled:bg-stone-200 disabled:text-stone-400 disabled:cursor-not-allowed">
         <span id="stripLabel">Strip frames</span>
-        <span class="text-red-300 font-mono font-normal text-base">→</span>
+        <span class="font-mono font-normal text-base">→</span>
       </button>
+
       <button onclick="doSearchAgain()"
         class="w-full border border-stone-300 text-stone-600 font-mono text-[10px] uppercase
                tracking-widest px-4 py-2.5 flex items-center justify-center cursor-pointer
@@ -135,8 +145,8 @@
   </div>
 
   <footer class="px-5 py-2 border-t border-stone-200 bg-white flex items-center shrink-0">
-    <span class="text-[9px] text-stone-400 tracking-wide">v1.3</span>
-    <span class="ml-auto text-[9px] text-stone-400">
+    <span class="text-[9px] text-stone-500 tracking-wide">v1.0.2</span>
+    <span class="ml-auto text-[9px] text-stone-500">
       <a href="https://alekslinde.com" target="_blank"
          class="hover:text-stone-500 transition-colors" style="text-decoration:none;color:inherit">
         © alekslinde.com
@@ -151,7 +161,7 @@
   <div class="flex-1 overflow-y-auto px-5 pt-5 pb-4 flex flex-col gap-5 bg-stone-50">
 
     <div>
-      <div class="text-[9px] uppercase tracking-widest text-stone-400 mb-2">What this does</div>
+      <div class="text-[9px] uppercase tracking-widest text-stone-500 mb-2">What this does</div>
       <p class="text-[10px] text-stone-600 leading-relaxed">
         When SVGs exported from Adobe XD are imported into Figma, each frame gets wrapped in
         redundant groups, a clip mask node is added, and the frame background becomes a vector
@@ -160,49 +170,49 @@
     </div>
 
     <div>
-      <div class="text-[9px] uppercase tracking-widest text-stone-400 mb-2">The XD wrapper structure</div>
-      <div class="bg-white border border-stone-200 border-l-2 border-l-red-400 px-3 py-2.5 text-[10px] leading-[1.9] text-stone-600 font-mono">
+      <div class="text-[9px] uppercase tracking-widest text-stone-500 mb-2">The XD wrapper structure</div>
+      <div class="bg-white border border-stone-200 border-l-2 border-l-amber-400 px-3 py-2.5 text-[10px] leading-[1.9] text-stone-600 font-mono">
         <div>Frame <span class="text-stone-500">"Frame name"</span></div>
-        <div>&nbsp;&nbsp;<span class="line-through text-red-500">Group "Clip path group"</span></div>
-        <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-stone-600">Group "Frame name"</span> <span class="text-stone-400">← unwrapped</span></div>
-        <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="line-through text-red-500">Vector (bg fill)</span> <span class="text-stone-400">← promoted</span></div>
+        <div>&nbsp;&nbsp;<span class="line-through text-amber-600">Group "Clip path group"</span></div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-stone-600">Group "Frame name"</span> <span class="text-stone-500">← unwrapped</span></div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="line-through text-amber-600">Vector (bg fill)</span> <span class="text-stone-500">← promoted</span></div>
         <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-emerald-600">↳ your content</span></div>
-        <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="line-through text-red-500">clip-Frame-name</span> <span class="text-stone-400">← deleted</span></div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="line-through text-amber-600">clip-Frame-name</span> <span class="text-stone-500">← deleted</span></div>
       </div>
     </div>
 
     <div>
-      <div class="text-[9px] uppercase tracking-widest text-stone-400 mb-2">What gets fixed</div>
+      <div class="text-[9px] uppercase tracking-widest text-stone-500 mb-2">What gets fixed</div>
       <div class="flex flex-col gap-2.5">
         <div class="flex gap-3 items-start">
-          <span class="text-red-500 font-bold text-[10px] shrink-0 mt-px">1.</span>
+          <span class="text-stone-700 font-bold text-[10px] shrink-0 mt-px">1.</span>
           <p class="text-[10px] text-stone-600 leading-relaxed"><strong class="text-stone-800">Wrapper groups removed</strong> — outer "Clip path group" and inner frame-name group unwrapped; content placed directly in the frame.</p>
         </div>
         <div class="flex gap-3 items-start">
-          <span class="text-red-500 font-bold text-[10px] shrink-0 mt-px">2.</span>
+          <span class="text-stone-700 font-bold text-[10px] shrink-0 mt-px">2.</span>
           <p class="text-[10px] text-stone-600 leading-relaxed"><strong class="text-stone-800">Clip mask deleted</strong> — the <code class="font-mono text-[9px] bg-stone-100 px-0.5">clip-{name}</code> node is removed entirely.</p>
         </div>
         <div class="flex gap-3 items-start">
-          <span class="text-red-500 font-bold text-[10px] shrink-0 mt-px">3.</span>
+          <span class="text-stone-700 font-bold text-[10px] shrink-0 mt-px">3.</span>
           <p class="text-[10px] text-stone-600 leading-relaxed"><strong class="text-stone-800">Background fill promoted</strong> — full-frame vector path at bottom of stack is converted to the frame's fill and deleted.</p>
         </div>
       </div>
     </div>
 
     <div>
-      <div class="text-[9px] uppercase tracking-widest text-stone-400 mb-2">How to use</div>
+      <div class="text-[9px] uppercase tracking-widest text-stone-500 mb-2">How to use</div>
       <div class="flex flex-col gap-1.5 text-[10px] text-stone-600 leading-relaxed">
-        <div><span class="text-stone-400 font-bold">A.</span> Choose <em>This page</em> or <em>Whole file</em>, then click <strong class="text-stone-800">Find</strong>.</div>
-        <div><span class="text-stone-400 font-bold">B.</span> Review the detected frames. Use the locate button on each row to identify them on the canvas.</div>
-        <div><span class="text-stone-400 font-bold">C.</span> Click <strong class="text-stone-800">Strip frames</strong> to clean them all.</div>
+        <div><span class="text-stone-500 font-bold">A.</span> Choose <em>This page</em> or <em>Whole file</em>, then click <strong class="text-stone-800">Find</strong>.</div>
+        <div><span class="text-stone-500 font-bold">B.</span> Review the detected frames. Use the locate button on each row to identify them on the canvas.</div>
+        <div><span class="text-stone-500 font-bold">C.</span> Click <strong class="text-stone-800">Strip frames</strong> to clean them all.</div>
       </div>
     </div>
 
   </div>
 
   <footer class="px-5 py-2 border-t border-stone-200 bg-white flex items-center shrink-0">
-    <span class="text-[9px] text-stone-400 tracking-wide">v1.3</span>
-    <span class="ml-auto text-[9px] text-stone-400">
+    <span class="text-[9px] text-stone-500 tracking-wide">v1.0.2</span>
+    <span class="ml-auto text-[9px] text-stone-500">
       <a href="https://alekslinde.com" target="_blank"
          class="hover:text-stone-500 transition-colors" style="text-decoration:none;color:inherit">
         © alekslinde.com
@@ -218,251 +228,6 @@
   </svg>
 </div>
 
-<script>
-  var scanResult = null;
-  var currentScope = 'page';
-
-  // Frame list styling: bordered/scrolling when populated, centered when empty.
-  var LIST_CLASS_FULL  = 'flex-1 overflow-y-auto mx-5 mb-3 border border-stone-200 bg-white divide-y divide-stone-100 min-h-0';
-  var LIST_CLASS_EMPTY = 'flex-1 mx-5 mb-3 flex flex-col items-center justify-center text-center gap-3 min-h-0';
-
-  function setScope(s) {
-    currentScope = s;
-    document.getElementById('scopePage').className = 'scope-btn' + (s === 'page' ? ' active' : '');
-    document.getElementById('scopeFile').className = 'scope-btn' + (s === 'file' ? ' active' : '');
-  }
-
-  function showHelp() {
-    document.getElementById('pageMain').classList.remove('active');
-    document.getElementById('pageHelp').classList.add('active');
-    document.getElementById('headerMain').classList.add('hidden');
-    document.getElementById('headerHelp').classList.remove('hidden');
-    document.getElementById('headerHelp').classList.add('flex');
-  }
-
-  function showMain() {
-    document.getElementById('pageHelp').classList.remove('active');
-    document.getElementById('pageMain').classList.add('active');
-    document.getElementById('headerHelp').classList.add('hidden');
-    document.getElementById('headerHelp').classList.remove('flex');
-    document.getElementById('headerMain').classList.remove('hidden');
-  }
-
-  function showView(name) {
-    ['viewInitial', 'viewScanning', 'viewResults'].forEach(function(id) {
-      var el = document.getElementById(id);
-      if (id === name) {
-        el.classList.remove('hidden');
-        el.classList.add('flex');
-      } else {
-        el.classList.add('hidden');
-        el.classList.remove('flex');
-      }
-    });
-  }
-
-  function doFind() {
-    document.getElementById('findLabel').textContent = 'Finding…';
-    document.getElementById('btnFind').disabled = true;
-
-    // Reset and show the live scanning view.
-    document.getElementById('scanCurrent').textContent = 'Reading document…';
-    document.getElementById('scanCurrent').className =
-      'scanning flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-[11px] text-stone-700';
-    document.getElementById('scanBar').style.width = '0%';
-    document.getElementById('scanCount').textContent = '0 / 0';
-    document.getElementById('scanFound').textContent = '0 found';
-    document.getElementById('scanFound').className = 'text-stone-400 font-bold';
-    showView('viewScanning');
-
-    parent.postMessage({ pluginMessage: { type: 'scan', scope: currentScope } }, '*');
-  }
-
-  function doSearchAgain() {
-    scanResult = null;
-    document.getElementById('findLabel').textContent = 'Find';
-    document.getElementById('btnFind').disabled = false;
-    document.getElementById('stripSummary').classList.add('hidden');
-    document.getElementById('btnStrip').classList.remove('hidden');
-    showView('viewInitial');
-  }
-
-  function doStrip() {
-    if (!scanResult || !scanResult.frames || !scanResult.frames.length) return;
-    var ids = scanResult.frames.map(function(f) { return f.id; });
-
-    // Reset every row to a queued state and disable interaction.
-    ids.forEach(function(id) {
-      var row = document.getElementById('row-' + id);
-      var st  = document.getElementById('st-' + id);
-      if (row) { row.setAttribute('data-status', 'queued'); row.removeAttribute('title'); }
-      if (st)  { st.textContent = '·'; }
-    });
-
-    var btn = document.getElementById('btnStrip');
-    btn.disabled = true;
-    document.getElementById('stripLabel').textContent = 'Stripping…';
-
-    parent.postMessage({ pluginMessage: { type: 'strip', ids: ids } }, '*');
-  }
-
-  function doLocate(nodeId) {
-    parent.postMessage({ pluginMessage: { type: 'locate', id: nodeId } }, '*');
-  }
-
-  window.onmessage = function(event) {
-    var msg = event.data.pluginMessage;
-    if (!msg) return;
-
-    if (msg.type === 'scan-start') {
-      document.getElementById('scanCurrent').textContent = 'Reading document…';
-      document.getElementById('scanBar').style.width = '0%';
-      document.getElementById('scanCount').textContent = '0 / ' + msg.total;
-      document.getElementById('scanFound').textContent = '0 found';
-      document.getElementById('scanFound').className = 'text-stone-400 font-bold';
-      showView('viewScanning');
-      if (msg.total === 0) {
-        document.getElementById('scanCurrent').textContent = 'Nothing to scan…';
-        document.getElementById('scanCurrent').classList.remove('scanning');
-      }
-    }
-
-    if (msg.type === 'scan-progress') {
-      var cur = document.getElementById('scanCurrent');
-      cur.textContent = msg.name;
-      // Briefly tint matched frames so hits stand out as they fly by.
-      cur.className = 'scanning flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-[11px] ' +
-        (msg.hit ? 'text-emerald-600 font-bold' : 'text-stone-700');
-      document.getElementById('scanArrow').textContent = msg.hit ? '✓' : '›';
-
-      var pct = msg.total ? Math.round(msg.index / msg.total * 100) : 100;
-      document.getElementById('scanBar').style.width = pct + '%';
-      document.getElementById('scanCount').textContent = msg.index + ' / ' + msg.total;
-
-      var found = document.getElementById('scanFound');
-      found.textContent = msg.found + ' found';
-      found.className = msg.found > 0 ? 'text-red-600 font-bold' : 'text-stone-400 font-bold';
-    }
-
-    if (msg.type === 'scan-result') {
-      scanResult = msg;
-      document.getElementById('scanArrow').textContent = '›';
-      document.getElementById('findLabel').textContent = 'Find';
-      document.getElementById('btnFind').disabled = false;
-
-      var heading = document.getElementById('resultsHeading');
-      var headingWrap = document.getElementById('resultsHeadingWrap');
-      var list    = document.getElementById('frameList');
-      var stripBtn = document.getElementById('btnStrip');
-      var stripLabel = document.getElementById('stripLabel');
-
-      // Reset action area in case we are returning from a previous strip run.
-      stripBtn.classList.remove('hidden');
-      document.getElementById('stripSummary').classList.add('hidden');
-
-      if (msg.count === 0) {
-        // Empty state fills the list area so the actions stay pinned to the bottom.
-        headingWrap.classList.add('hidden');
-        stripBtn.classList.add('hidden');
-        list.className = LIST_CLASS_EMPTY;
-
-        var where = msg.mode === 'selection'
-          ? 'None of the selected frames'
-          : (msg.mode === 'file' ? 'Nothing in this file' : 'Nothing on this page');
-
-        list.innerHTML =
-          '<div class="w-11 h-11 rounded-sm border border-stone-200 flex items-center justify-center text-stone-300 font-mono text-[20px]">∅</div>' +
-          '<div class="flex flex-col gap-1.5 items-center">' +
-            '<span class="font-display font-bold text-[15px] text-stone-700">No XD frames found</span>' +
-            '<span class="text-[10px] text-stone-400 leading-relaxed px-6">' + where + ' needs stripping. ' +
-              'Try the “Whole file” scope or a different selection.</span>' +
-          '</div>';
-      } else {
-        headingWrap.classList.remove('hidden');
-        heading.textContent = msg.count + ' frame' + (msg.count !== 1 ? 's' : '') + ' found';
-        list.className = LIST_CLASS_FULL;
-        list.innerHTML = msg.frames.map(function(f) {
-          return '<div class="frame-item" data-status="idle" id="row-' + escAttr(f.id) + '">' +
-            '<span class="frame-status" id="st-' + escAttr(f.id) + '">·</span>' +
-            '<span class="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">' + escHtml(f.name) + '</span>' +
-            '<button onclick="doLocate(\'' + escAttr(f.id) + '\')" title="Locate on canvas"' +
-            ' class="shrink-0 ml-2 text-stone-400 hover:text-stone-700 transition-colors border-none bg-transparent cursor-pointer px-1 py-0 font-mono text-[22px] leading-none">' +
-            '⊙</button>' +
-            '</div>';
-        }).join('');
-        stripBtn.disabled = false;
-        stripLabel.textContent = 'Strip ' + msg.count + ' frame' + (msg.count !== 1 ? 's' : '');
-      }
-
-      showView('viewResults');
-    }
-
-    if (msg.type === 'strip-progress') {
-      var row = document.getElementById('row-' + msg.id);
-      var st  = document.getElementById('st-' + msg.id);
-      if (row) {
-        row.setAttribute('data-status', msg.status);
-        if (msg.reason) row.title = msg.reason; else row.removeAttribute('title');
-        row.scrollIntoView({ block: 'nearest' });
-      }
-      if (st) {
-        if (msg.status === 'in-progress')   st.innerHTML = '<span class="spin">◌</span>';
-        else if (msg.status === 'done')     st.textContent = '✓';
-        else if (msg.status === 'error')    st.textContent = '✕';
-        else if (msg.status === 'skipped')  st.textContent = '–';
-        else                                st.textContent = '·';
-      }
-    }
-
-    if (msg.type === 'done') {
-      var stripBtn2 = document.getElementById('btnStrip');
-      var summary   = document.getElementById('stripSummary');
-      stripBtn2.classList.add('hidden');
-
-      var parts = [];
-      parts.push('✓ ' + msg.stripped + ' stripped');
-      if (msg.skipped) parts.push(msg.skipped + ' skipped');
-      if (msg.errored) parts.push(msg.errored + ' failed');
-
-      var ok = !msg.errored;
-      summary.textContent = parts.join('  ·  ');
-      summary.className = 'text-[10px] text-center px-3.5 py-3 rounded-sm border leading-relaxed ' +
-        (ok ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
-            : 'bg-red-50 border-red-100 text-red-700');
-
-      scanResult = null;
-    }
-  };
-
-  function escHtml(s) {
-    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  }
-
-  function escAttr(s) {
-    return String(s).replace(/'/g, '&#39;');
-  }
-
-  // ── Resize ─────────────────────────────────────────────────────────────────
-  document.addEventListener('DOMContentLoaded', function() {
-    var handle = document.getElementById('resize-handle');
-    var startX, startY, startW, startH;
-    handle.addEventListener('mousedown', function(e) {
-      e.preventDefault();
-      startX = e.clientX; startY = e.clientY;
-      startW = window.innerWidth; startH = window.innerHeight;
-      function onMove(e) {
-        var w = Math.max(320, startW + (e.clientX - startX));
-        var h = Math.max(400, startH + (e.clientY - startY));
-        parent.postMessage({ pluginMessage: { type: 'resize', width: Math.round(w), height: Math.round(h) } }, '*');
-      }
-      function onUp() {
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('mouseup', onUp);
-      }
-      document.addEventListener('mousemove', onMove);
-      document.addEventListener('mouseup', onUp);
-    });
-  });
-</script>
+<script>/* INLINE_JS */</script>
 </body>
 </html>
