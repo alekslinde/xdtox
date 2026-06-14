@@ -7,6 +7,7 @@
     "build": "npm run build:css && node scripts/build.js",
     "dev": "node demo/dev.js",
     "prod": "npm run build && node demo/server.js",
+    "demo": "npm run build && node demo/server.js",
     "server": "node demo/server.js",
     "test": "jest",
     "cache-buster": "node scripts/get-cache-buster.js"
