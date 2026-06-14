@@ -219,6 +219,8 @@
   var scanResult = null;
   var currentScope = 'page';
 
+  var LOCATE_ICON = '<svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M10.4705 10.4706V11.4706H2.52932V10.4706H10.4705ZM10.4705 2.52939H2.52932V11.4706L2.42679 11.4647C1.95616 11.4168 1.58181 11.0429 1.53423 10.5722L1.52935 10.4706V2.52939C1.52935 1.97712 1.97705 1.52941 2.52932 1.52941H10.4705L10.5721 1.5343C11.0766 1.58529 11.4705 2.01147 11.4705 2.52939V10.4706L11.4647 10.5722C11.417 11.0431 11.0431 11.4171 10.5721 11.4647L10.4705 11.4706V2.52939Z" fill="currentColor"/><path d="M5.35292 5.35294H7.64704V7.64706H5.35292V5.35294Z" fill="currentColor"/><path d="M3.82353 6.11765V6.88235H0L3.34264e-08 6.11765H3.82353Z" fill="currentColor"/><path d="M13 6.11765V6.88235H9.17643V6.11765H13Z" fill="currentColor"/><path d="M6.88231 13H6.1176V9.17647H6.88231V13Z" fill="currentColor"/><path d="M6.88231 3.82353H6.1176V0L6.88231 6.68527e-08V3.82353Z" fill="currentColor"/></svg>';
+
   // Frame list styling: bordered/scrolling when populated, centered when empty.
   var LIST_CLASS_FULL  = 'flex-1 overflow-y-auto mx-5 mb-3 border border-stone-200 bg-white divide-y divide-stone-100 min-h-0';
   var LIST_CLASS_EMPTY = 'flex-1 mx-5 mb-3 flex flex-col items-center justify-center text-center gap-3 min-h-0';
@@ -330,8 +332,8 @@
           '<span class="frame-status">·</span>' +
           '<span class="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">' + escHtml(msg.name) + '</span>' +
           '<button onclick="doLocate(\'' + escAttr(msg.id) + '\')" title="Locate on canvas"' +
-          ' class="shrink-0 ml-2 text-stone-400 hover:text-stone-700 transition-colors border-none bg-transparent cursor-pointer px-1 py-0 font-mono text-[22px] leading-none">' +
-          '⊙</button>';
+          ' class="shrink-0 ml-2 text-stone-400 hover:text-stone-700 transition-colors border-none bg-transparent cursor-pointer px-1 py-0 flex items-center">' +
+          LOCATE_ICON + '</button>';
         list.appendChild(row);
         row.scrollIntoView({ block: 'nearest' });
       }
@@ -386,8 +388,8 @@
             '<span class="frame-status" id="st-' + escAttr(f.id) + '">·</span>' +
             '<span class="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">' + escHtml(f.name) + '</span>' +
             '<button onclick="doLocate(\'' + escAttr(f.id) + '\')" title="Locate on canvas"' +
-            ' class="shrink-0 ml-2 text-stone-400 hover:text-stone-700 transition-colors border-none bg-transparent cursor-pointer px-1 py-0 font-mono text-[22px] leading-none">' +
-            '⊙</button>' +
+            ' class="shrink-0 ml-2 text-stone-400 hover:text-stone-700 transition-colors border-none bg-transparent cursor-pointer px-1 py-0 flex items-center">' +
+            LOCATE_ICON + '</button>' +
             '</div>';
         }).join('');
         stripBtn.disabled = false;
