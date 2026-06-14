@@ -44,16 +44,22 @@ Node positions are preserved throughout. The operation is not undoable via the p
 xdtox/
 ├── src/
 │   ├── code.js          Figma plugin backend (runs in the plugin sandbox)
+│   ├── ui.js            UI logic and event handling
 │   ├── helpers.js       Pure helper functions, shared with tests
 │   ├── helpers.test.js  Jest unit tests for all helper functions
-│   ├── ui.html          UI source template (edit this, not the root ui.html)
+│   ├── ui.html          UI template (edit this, not the built ui.html)
 │   └── styles.css       Tailwind directives + custom component CSS
+├── demo/
+│   ├── dev.js           Watch mode for local UI preview
+│   ├── server.js        Local dev server (serves demo/index.html)
+│   ├── index.html       Sandboxed UI preview for development
+│   └── mock-data.js     Mock Figma API for testing UI without the plugin
 ├── scripts/
-│   └── build.js         Inlines compiled CSS into ui.html for Figma
+│   ├── build.js         Inlines compiled CSS and scripts into ui.html
+│   └── get-cache-buster.js  Cache busting utility
 ├── dist/
-│   └── styles.css       Compiled Tailwind output (git-ignored or committed)
+│   └── styles.css       Compiled Tailwind output
 ├── manifest.json        Figma plugin manifest
-├── ui.html              Built UI output — what Figma actually loads
 ├── tailwind.config.js   Tailwind configuration
 └── package.json
 ```
@@ -62,7 +68,9 @@ xdtox/
 
 **`src/code.js`** runs inside Figma's plugin sandbox. It has access to the `figma` API but no DOM. It listens for messages from the UI (`scan`, `strip`, `resize`) and posts results back.
 
-**`src/helpers.js`** contains the five pure detection functions with no Figma dependencies, making them independently testable:
+**`src/ui.js`** contains all UI logic and event listeners. It communicates with the plugin backend via postMessage. Updates here require a rebuild + Figma reload to test.
+
+**`src/helpers.js`** contains five pure detection functions with no Figma or DOM dependencies, making them independently testable:
 
 | Function | Purpose |
 |---|---|
@@ -72,7 +80,9 @@ xdtox/
 | `looksLikeXDFrame(frame)` | Returns true if a frame has the full XD structure |
 | `isBackgroundVector(node, frame)` | Detects a full-frame background vector path |
 
-**`src/ui.html`** is the source template. It contains a `/* INLINE_CSS */` placeholder that the build script replaces with compiled CSS. **Do not edit the root `ui.html` directly** — changes will be overwritten on the next build.
+**`src/ui.html`** is the source template (edit this, not the built `ui.html` in the root). It contains `/* INLINE_CSS */` and `/* INLINE_SCRIPT */` placeholders that the build script replaces with compiled CSS and bundled JavaScript.
+
+**`demo/`** provides a sandboxed preview environment for testing UI changes without reloading in Figma. The mock data in `mock-data.js` simulates the Figma API.
 
 ---
 
@@ -81,7 +91,7 @@ xdtox/
 ### Prerequisites
 
 - Node.js 18+
-- Figma desktop app
+- Figma desktop app (for testing the actual plugin)
 
 ### Install dependencies
 
@@ -91,19 +101,28 @@ npm install
 
 ### Build
 
-Compiles Tailwind and inlines the CSS into `ui.html`:
+Compiles Tailwind and inlines CSS + JavaScript into the plugin UI:
 
 ```bash
 npm run build
 ```
 
-### Watch mode
+### Local UI preview
 
-Recompiles CSS on every `src/styles.css` change. You still need to run `node scripts/build.js` (or `npm run build`) to update `ui.html` — or reload the plugin in Figma:
+To see UI changes without reloading the plugin repeatedly:
 
 ```bash
 npm run dev
 ```
+
+This runs a local dev server at `http://localhost:3000` with live CSS recompilation and the mock Figma API. Test interactions against mock data before confirming in Figma.
+
+### Testing the built plugin
+
+After running `npm run build`:
+
+1. In Figma: **Plugins → Development → XDtox → Reload plugin**.
+2. The plugin loads the built files (`ui.html`, bundled CSS/JS, `code.js`).
 
 ### Tests
 
@@ -111,23 +130,37 @@ npm run dev
 npm test
 ```
 
-All 27 tests cover the five helper functions across normal inputs, edge cases, and boundary conditions.
+Runs Jest on `src/helpers.test.js`. All tests cover the five helper functions across normal inputs, edge cases, and boundary conditions. Tests do not require Figma or the DOM.
 
 ---
 
 ## Making changes
 
-### Changing the UI
+### Changing the UI layout or styles
 
-1. Edit `src/ui.html` (layout/markup) or `src/styles.css` (styles).
-2. Run `npm run build`.
-3. In Figma: **Plugins → Development → XDtox → Reload plugin**.
+1. Edit `src/ui.html` (structure/markup) or `src/styles.css` (styles).
+2. For quick preview: `npm run dev` and test at `http://localhost:3000` against mock data.
+3. When ready: `npm run build` to compile CSS and inline scripts.
+4. In Figma: **Plugins → Development → XDtox → Reload plugin** to test the built version.
 
-Tailwind utility classes can be used directly in `src/ui.html`. Custom CSS that can't be expressed as utilities (clip-paths, animations, scrollbar styling) lives in the `@layer components` and `@layer utilities` blocks in `src/styles.css`.
+Tailwind utility classes work directly in `src/ui.html`. Custom CSS that can't be expressed as utilities (clip-paths, animations, scrollbar styling) lives in the `@layer components` and `@layer utilities` blocks in `src/styles.css`.
 
-### Changing the detection logic
+### Changing UI logic
 
-Edit the relevant function in `src/helpers.js` and update or add tests in `src/helpers.test.js`. Run `npm run build` — esbuild bundles `helpers.js` directly into `code.js`, so there is no manual sync step.
+1. Edit `src/ui.js` (event listeners, message passing, DOM updates).
+2. Test locally: `npm run dev`.
+3. Build and reload in Figma: `npm run build`, then **Reload plugin**.
+
+### Changing detection logic
+
+1. Edit the relevant function in `src/helpers.js`.
+2. Add or update tests in `src/helpers.test.js`.
+3. Run `npm test` to verify.
+4. Run `npm run build` — esbuild bundles `helpers.js` directly into `code.js`, so there's no manual sync step.
+
+### Changing the plugin backend
+
+Edit `src/code.js` directly. It listens for messages from the UI (`scan`, `strip`, `resize`) and posts results back. After changes, rebuild and reload in Figma.
 
 ---
 
