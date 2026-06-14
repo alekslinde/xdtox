@@ -49,9 +49,9 @@
       border-color: #999;
     }
     .demo-btn.active {
-      background: #dc2626;
+      background: #1c1917;
       color: white;
-      border-color: #991b1b;
+      border-color: #44403c;
     }
   </style>
 </head>
@@ -104,15 +104,17 @@
             pluginMessage: { type: 'scan-start', total: 42 }
           }, '*');
 
-          // Simulate progress up to 50% (21 of 42 frames scanned, 3 found)
+          // Simulate progress up to 50% (21 of 42 frames scanned, ~3 found)
           const names = ['Board', 'Section', 'Header', 'Card A', 'Card B'];
           const total = 42;
           const stopAt = Math.floor(total / 2); // 21
           let scanned = 0;
           let found = 0;
+          let hitIndex = 0;
           const progressInterval = setInterval(() => {
             if (scanned < stopAt) {
               const hit = Math.random() > 0.7;
+              const name = names[Math.floor(Math.random() * names.length)];
               if (hit) found++;
               scanned += 3;
               iframeWindow.postMessage({
@@ -120,9 +122,10 @@
                   type: 'scan-progress',
                   index: scanned,
                   total,
-                  name: names[Math.floor(Math.random() * names.length)],
+                  name,
                   hit,
                   found,
+                  id: hit ? 'scan-hit-' + (hitIndex++) : undefined,
                 }
               }, '*');
             } else {
