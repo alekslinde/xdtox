@@ -77,25 +77,27 @@
   </div>
 
   <!-- ── Scanning view ── -->
-  <div id="viewScanning" class="hidden flex-1 flex flex-col px-5 py-4 gap-3 justify-center">
-    <span class="text-[9px] uppercase tracking-widest text-stone-500">Scanning</span>
+  <div id="viewScanning" class="hidden flex-1 flex flex-col min-h-0">
 
-    <!-- Current node under inspection -->
-    <div class="border border-stone-200 bg-white px-3.5 py-3 flex items-center gap-2 min-h-[46px]">
-      <span id="scanArrow" class="text-stone-300 shrink-0 font-mono">›</span>
-      <span id="scanCurrent"
-        class="scanning flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-[11px] text-stone-700">…</span>
+    <!-- Top: label + live node under inspection -->
+    <div class="flex-1 flex flex-col px-5 pt-4 gap-2 min-h-0">
+      <span class="text-[9px] uppercase tracking-widest text-stone-500">Scanning</span>
+      <div class="border border-stone-200 bg-white px-3.5 py-3 flex items-center gap-2 min-h-[46px]">
+        <span id="scanArrow" class="text-stone-300 shrink-0 font-mono">›</span>
+        <span id="scanCurrent"
+          class="scanning flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-[11px] text-stone-700">…</span>
+      </div>
     </div>
 
-    <!-- Progress bar -->
-    <div class="h-1 bg-stone-200 rounded-sm overflow-hidden">
-      <div id="scanBar" class="h-full bg-stone-800 transition-all duration-100" style="width:0%"></div>
-    </div>
-
-    <!-- Counters -->
-    <div class="flex items-center justify-between text-[9px] uppercase tracking-widest">
-      <span id="scanCount" class="text-stone-500">0 / 0</span>
-      <span id="scanFound" class="text-stone-500 font-bold">0 found</span>
+    <!-- Pinned: progress bar + counters -->
+    <div class="px-5 pb-4 pt-2 flex flex-col gap-2 shrink-0">
+      <div class="h-1 bg-stone-200 rounded-sm overflow-hidden">
+        <div id="scanBar" class="h-full bg-stone-800 transition-all duration-100" style="width:0%"></div>
+      </div>
+      <div class="flex items-center justify-between text-[9px] uppercase tracking-widest">
+        <span id="scanCount" class="text-stone-500">0 / 0</span>
+        <span id="scanFound" class="text-stone-500 font-bold">0 found</span>
+      </div>
     </div>
   </div>
 
