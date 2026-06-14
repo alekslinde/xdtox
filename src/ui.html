@@ -24,7 +24,7 @@
     <button onclick="showHelp()" title="How it works"
       class="text-[10px] text-stone-500 font-mono font-bold cursor-pointer bg-transparent
              border border-stone-300 rounded-sm w-5 h-5 flex items-center justify-center
-             hover:border-red-500 hover:text-red-600 transition-colors">
+             hover:border-stone-500 hover:text-stone-900 transition-colors">
       ?
     </button>
   </div>
@@ -47,10 +47,10 @@
 
     <!-- Hero / intro — fills the space and centers -->
     <div class="flex-1 flex flex-col items-center justify-center text-center gap-3 px-5 min-h-0">
-      <div class="w-11 h-11 rounded-sm border border-stone-200 flex items-center justify-center text-red-500 font-mono text-[20px]">✶</div>
+      <div class="w-11 h-11 rounded-sm border border-stone-200 flex items-center justify-center text-stone-700 font-mono text-[20px]">✶</div>
       <div class="flex flex-col gap-1.5 items-center">
         <span class="font-display font-bold text-[15px] text-stone-700">Strip XD import artifacts</span>
-        <span class="text-[10px] text-stone-400 leading-relaxed px-6">Find Figma frames wrapped in Adobe XD clip groups and clean them in one pass.</span>
+        <span class="text-[10px] text-stone-500 leading-relaxed px-6">Find Figma frames wrapped in Adobe XD clip groups and clean them in one pass.</span>
       </div>
     </div>
 
@@ -58,7 +58,7 @@
     <div class="px-5 pb-4 pt-2 flex flex-col gap-3 shrink-0">
       <!-- Scope -->
       <div class="flex flex-col gap-1.5">
-        <span class="text-[9px] uppercase tracking-widest text-stone-400">Scope</span>
+        <span class="text-[9px] uppercase tracking-widest text-stone-500">Scope</span>
         <div class="flex rounded border border-stone-300 overflow-hidden bg-stone-200 p-0.5 gap-0.5">
           <button id="scopePage" class="scope-btn active" onclick="setScope('page')">This page</button>
           <button id="scopeFile" class="scope-btn" onclick="setScope('file')">Whole file</button>
@@ -78,7 +78,7 @@
 
   <!-- ── Scanning view ── -->
   <div id="viewScanning" class="hidden flex-1 flex flex-col px-5 py-4 gap-3 justify-center">
-    <span class="text-[9px] uppercase tracking-widest text-stone-400">Scanning</span>
+    <span class="text-[9px] uppercase tracking-widest text-stone-500">Scanning</span>
 
     <!-- Current node under inspection -->
     <div class="border border-stone-200 bg-white px-3.5 py-3 flex items-center gap-2 min-h-[46px]">
@@ -89,13 +89,13 @@
 
     <!-- Progress bar -->
     <div class="h-1 bg-stone-200 rounded-sm overflow-hidden">
-      <div id="scanBar" class="h-full bg-red-600 transition-all duration-100" style="width:0%"></div>
+      <div id="scanBar" class="h-full bg-stone-800 transition-all duration-100" style="width:0%"></div>
     </div>
 
     <!-- Counters -->
     <div class="flex items-center justify-between text-[9px] uppercase tracking-widest">
-      <span id="scanCount" class="text-stone-400">0 / 0</span>
-      <span id="scanFound" class="text-stone-400 font-bold">0 found</span>
+      <span id="scanCount" class="text-stone-500">0 / 0</span>
+      <span id="scanFound" class="text-stone-500 font-bold">0 found</span>
     </div>
   </div>
 
@@ -117,12 +117,12 @@
       <div id="stripSummary"
         class="hidden text-[10px] text-center px-3.5 py-3 rounded-sm border leading-relaxed"></div>
       <button id="btnStrip" onclick="doStrip()"
-        class="w-full bg-red-600 text-white font-display font-bold text-[13px] tracking-tight
+        class="w-full bg-stone-900 text-white font-display font-bold text-[13px] tracking-tight
                px-5 py-3.5 flex items-center justify-between cursor-pointer
-               transition-colors hover:bg-red-700
+               transition-colors hover:bg-stone-700
                disabled:bg-stone-200 disabled:text-stone-400 disabled:cursor-not-allowed">
         <span id="stripLabel">Strip frames</span>
-        <span class="text-red-300 font-mono font-normal text-base">→</span>
+        <span class="font-mono font-normal text-base">→</span>
       </button>
       <button onclick="doSearchAgain()"
         class="w-full border border-stone-300 text-stone-600 font-mono text-[10px] uppercase
@@ -135,8 +135,8 @@
   </div>
 
   <footer class="px-5 py-2 border-t border-stone-200 bg-white flex items-center shrink-0">
-    <span class="text-[9px] text-stone-400 tracking-wide">v1.3</span>
-    <span class="ml-auto text-[9px] text-stone-400">
+    <span class="text-[9px] text-stone-500 tracking-wide">v1.3</span>
+    <span class="ml-auto text-[9px] text-stone-500">
       <a href="https://alekslinde.com" target="_blank"
          class="hover:text-stone-500 transition-colors" style="text-decoration:none;color:inherit">
         © alekslinde.com
@@ -151,7 +151,7 @@
   <div class="flex-1 overflow-y-auto px-5 pt-5 pb-4 flex flex-col gap-5 bg-stone-50">
 
     <div>
-      <div class="text-[9px] uppercase tracking-widest text-stone-400 mb-2">What this does</div>
+      <div class="text-[9px] uppercase tracking-widest text-stone-500 mb-2">What this does</div>
       <p class="text-[10px] text-stone-600 leading-relaxed">
         When SVGs exported from Adobe XD are imported into Figma, each frame gets wrapped in
         redundant groups, a clip mask node is added, and the frame background becomes a vector
@@ -160,49 +160,49 @@
     </div>
 
     <div>
-      <div class="text-[9px] uppercase tracking-widest text-stone-400 mb-2">The XD wrapper structure</div>
-      <div class="bg-white border border-stone-200 border-l-2 border-l-red-400 px-3 py-2.5 text-[10px] leading-[1.9] text-stone-600 font-mono">
+      <div class="text-[9px] uppercase tracking-widest text-stone-500 mb-2">The XD wrapper structure</div>
+      <div class="bg-white border border-stone-200 border-l-2 border-l-amber-400 px-3 py-2.5 text-[10px] leading-[1.9] text-stone-600 font-mono">
         <div>Frame <span class="text-stone-500">"Frame name"</span></div>
-        <div>&nbsp;&nbsp;<span class="line-through text-red-500">Group "Clip path group"</span></div>
-        <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-stone-600">Group "Frame name"</span> <span class="text-stone-400">← unwrapped</span></div>
-        <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="line-through text-red-500">Vector (bg fill)</span> <span class="text-stone-400">← promoted</span></div>
+        <div>&nbsp;&nbsp;<span class="line-through text-amber-600">Group "Clip path group"</span></div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-stone-600">Group "Frame name"</span> <span class="text-stone-500">← unwrapped</span></div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="line-through text-amber-600">Vector (bg fill)</span> <span class="text-stone-500">← promoted</span></div>
         <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="text-emerald-600">↳ your content</span></div>
-        <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="line-through text-red-500">clip-Frame-name</span> <span class="text-stone-400">← deleted</span></div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="line-through text-amber-600">clip-Frame-name</span> <span class="text-stone-500">← deleted</span></div>
       </div>
     </div>
 
     <div>
-      <div class="text-[9px] uppercase tracking-widest text-stone-400 mb-2">What gets fixed</div>
+      <div class="text-[9px] uppercase tracking-widest text-stone-500 mb-2">What gets fixed</div>
       <div class="flex flex-col gap-2.5">
         <div class="flex gap-3 items-start">
-          <span class="text-red-500 font-bold text-[10px] shrink-0 mt-px">1.</span>
+          <span class="text-stone-700 font-bold text-[10px] shrink-0 mt-px">1.</span>
           <p class="text-[10px] text-stone-600 leading-relaxed"><strong class="text-stone-800">Wrapper groups removed</strong> — outer "Clip path group" and inner frame-name group unwrapped; content placed directly in the frame.</p>
         </div>
         <div class="flex gap-3 items-start">
-          <span class="text-red-500 font-bold text-[10px] shrink-0 mt-px">2.</span>
+          <span class="text-stone-700 font-bold text-[10px] shrink-0 mt-px">2.</span>
           <p class="text-[10px] text-stone-600 leading-relaxed"><strong class="text-stone-800">Clip mask deleted</strong> — the <code class="font-mono text-[9px] bg-stone-100 px-0.5">clip-{name}</code> node is removed entirely.</p>
         </div>
         <div class="flex gap-3 items-start">
-          <span class="text-red-500 font-bold text-[10px] shrink-0 mt-px">3.</span>
+          <span class="text-stone-700 font-bold text-[10px] shrink-0 mt-px">3.</span>
           <p class="text-[10px] text-stone-600 leading-relaxed"><strong class="text-stone-800">Background fill promoted</strong> — full-frame vector path at bottom of stack is converted to the frame's fill and deleted.</p>
         </div>
       </div>
     </div>
 
     <div>
-      <div class="text-[9px] uppercase tracking-widest text-stone-400 mb-2">How to use</div>
+      <div class="text-[9px] uppercase tracking-widest text-stone-500 mb-2">How to use</div>
       <div class="flex flex-col gap-1.5 text-[10px] text-stone-600 leading-relaxed">
-        <div><span class="text-stone-400 font-bold">A.</span> Choose <em>This page</em> or <em>Whole file</em>, then click <strong class="text-stone-800">Find</strong>.</div>
-        <div><span class="text-stone-400 font-bold">B.</span> Review the detected frames. Use the locate button on each row to identify them on the canvas.</div>
-        <div><span class="text-stone-400 font-bold">C.</span> Click <strong class="text-stone-800">Strip frames</strong> to clean them all.</div>
+        <div><span class="text-stone-500 font-bold">A.</span> Choose <em>This page</em> or <em>Whole file</em>, then click <strong class="text-stone-800">Find</strong>.</div>
+        <div><span class="text-stone-500 font-bold">B.</span> Review the detected frames. Use the locate button on each row to identify them on the canvas.</div>
+        <div><span class="text-stone-500 font-bold">C.</span> Click <strong class="text-stone-800">Strip frames</strong> to clean them all.</div>
       </div>
     </div>
 
   </div>
 
   <footer class="px-5 py-2 border-t border-stone-200 bg-white flex items-center shrink-0">
-    <span class="text-[9px] text-stone-400 tracking-wide">v1.3</span>
-    <span class="ml-auto text-[9px] text-stone-400">
+    <span class="text-[9px] text-stone-500 tracking-wide">v1.3</span>
+    <span class="ml-auto text-[9px] text-stone-500">
       <a href="https://alekslinde.com" target="_blank"
          class="hover:text-stone-500 transition-colors" style="text-decoration:none;color:inherit">
         © alekslinde.com
@@ -272,7 +272,7 @@
     document.getElementById('scanBar').style.width = '0%';
     document.getElementById('scanCount').textContent = '0 / 0';
     document.getElementById('scanFound').textContent = '0 found';
-    document.getElementById('scanFound').className = 'text-stone-400 font-bold';
+    document.getElementById('scanFound').className = 'text-stone-500 font-bold';
     showView('viewScanning');
 
     parent.postMessage({ pluginMessage: { type: 'scan', scope: currentScope } }, '*');
@@ -319,7 +319,7 @@
       document.getElementById('scanBar').style.width = '0%';
       document.getElementById('scanCount').textContent = '0 / ' + msg.total;
       document.getElementById('scanFound').textContent = '0 found';
-      document.getElementById('scanFound').className = 'text-stone-400 font-bold';
+      document.getElementById('scanFound').className = 'text-stone-500 font-bold';
       showView('viewScanning');
       if (msg.total === 0) {
         document.getElementById('scanCurrent').textContent = 'Nothing to scan…';
@@ -341,7 +341,7 @@
 
       var found = document.getElementById('scanFound');
       found.textContent = msg.found + ' found';
-      found.className = msg.found > 0 ? 'text-red-600 font-bold' : 'text-stone-400 font-bold';
+      found.className = msg.found > 0 ? 'text-stone-900 font-bold' : 'text-stone-500 font-bold';
     }
 
     if (msg.type === 'scan-result') {
@@ -374,7 +374,7 @@
           '<div class="w-11 h-11 rounded-sm border border-stone-200 flex items-center justify-center text-stone-300 font-mono text-[20px]">∅</div>' +
           '<div class="flex flex-col gap-1.5 items-center">' +
             '<span class="font-display font-bold text-[15px] text-stone-700">No XD frames found</span>' +
-            '<span class="text-[10px] text-stone-400 leading-relaxed px-6">' + where + ' needs stripping. ' +
+            '<span class="text-[10px] text-stone-500 leading-relaxed px-6">' + where + ' needs stripping. ' +
               'Try the “Whole file” scope or a different selection.</span>' +
           '</div>';
       } else {
@@ -428,7 +428,7 @@
       summary.textContent = parts.join('  ·  ');
       summary.className = 'text-[10px] text-center px-3.5 py-3 rounded-sm border leading-relaxed ' +
         (ok ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
-            : 'bg-red-50 border-red-100 text-red-700');
+            : 'bg-amber-50 border-amber-100 text-amber-700');
 
       scanResult = null;
     }
