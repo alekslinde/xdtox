@@ -79,22 +79,17 @@
   <!-- ── Scanning view ── -->
   <div id="viewScanning" class="hidden flex-1 flex flex-col min-h-0">
 
-    <!-- Top: label + live node under inspection -->
-    <div class="flex-1 flex flex-col px-5 pt-4 gap-2 min-h-0">
-      <span class="text-[9px] uppercase tracking-widest text-stone-500">Scanning</span>
-      <div class="border border-stone-200 bg-white px-3.5 py-3 flex items-center gap-2 min-h-[46px]">
-        <span id="scanArrow" class="text-stone-300 shrink-0 font-mono">›</span>
-        <span id="scanCurrent"
-          class="scanning flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-[11px] text-stone-700">…</span>
-      </div>
+    <!-- Live hit list — same structure as results, populates in real-time -->
+    <div id="scanList"
+      class="flex-1 overflow-y-auto mx-5 mt-4 mb-0 border border-stone-200 bg-white divide-y divide-stone-100 min-h-0">
     </div>
 
     <!-- Pinned: progress bar + counters -->
-    <div class="px-5 pb-4 pt-2 flex flex-col gap-2 shrink-0">
+    <div class="px-5 pb-4 pt-3 flex flex-col gap-2 shrink-0">
       <div class="h-1 bg-stone-200 rounded-sm overflow-hidden">
         <div id="scanBar" class="h-full bg-stone-800 transition-all duration-100" style="width:0%"></div>
       </div>
-      <div class="flex items-center justify-between text-[9px] uppercase tracking-widest">
+      <div class="border border-stone-200 bg-white px-3.5 py-2.5 flex items-center justify-between text-[9px] uppercase tracking-widest">
         <span id="scanCount" class="text-stone-500">0 / 0</span>
         <span id="scanFound" class="text-stone-500 font-bold">0 found</span>
       </div>
@@ -267,10 +262,8 @@
     document.getElementById('findLabel').textContent = 'Finding…';
     document.getElementById('btnFind').disabled = true;
 
-    // Reset and show the live scanning view.
-    document.getElementById('scanCurrent').textContent = 'Reading document…';
-    document.getElementById('scanCurrent').className =
-      'scanning flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-[11px] text-stone-700';
+    // Reset scan list and counters, then show scanning view.
+    document.getElementById('scanList').innerHTML = '';
     document.getElementById('scanBar').style.width = '0%';
     document.getElementById('scanCount').textContent = '0 / 0';
     document.getElementById('scanFound').textContent = '0 found';
@@ -317,25 +310,31 @@
     if (!msg) return;
 
     if (msg.type === 'scan-start') {
-      document.getElementById('scanCurrent').textContent = 'Reading document…';
+      document.getElementById('scanList').innerHTML = '';
       document.getElementById('scanBar').style.width = '0%';
       document.getElementById('scanCount').textContent = '0 / ' + msg.total;
       document.getElementById('scanFound').textContent = '0 found';
       document.getElementById('scanFound').className = 'text-stone-500 font-bold';
       showView('viewScanning');
-      if (msg.total === 0) {
-        document.getElementById('scanCurrent').textContent = 'Nothing to scan…';
-        document.getElementById('scanCurrent').classList.remove('scanning');
-      }
     }
 
     if (msg.type === 'scan-progress') {
-      var cur = document.getElementById('scanCurrent');
-      cur.textContent = msg.name;
-      // Briefly tint matched frames so hits stand out as they fly by.
-      cur.className = 'scanning flex-1 overflow-hidden text-ellipsis whitespace-nowrap text-[11px] ' +
-        (msg.hit ? 'text-emerald-600 font-bold' : 'text-stone-700');
-      document.getElementById('scanArrow').textContent = msg.hit ? '✓' : '›';
+      // Append a row to the live list when a hit is found.
+      if (msg.hit && msg.id) {
+        var list = document.getElementById('scanList');
+        var row = document.createElement('div');
+        row.className = 'frame-item';
+        row.setAttribute('data-status', 'idle');
+        row.id = 'scanrow-' + escAttr(msg.id);
+        row.innerHTML =
+          '<span class="frame-status">·</span>' +
+          '<span class="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">' + escHtml(msg.name) + '</span>' +
+          '<button onclick="doLocate(\'' + escAttr(msg.id) + '\')" title="Locate on canvas"' +
+          ' class="shrink-0 ml-2 text-stone-400 hover:text-stone-700 transition-colors border-none bg-transparent cursor-pointer px-1 py-0 font-mono text-[22px] leading-none">' +
+          '⊙</button>';
+        list.appendChild(row);
+        row.scrollIntoView({ block: 'nearest' });
+      }
 
       var pct = msg.total ? Math.round(msg.index / msg.total * 100) : 100;
       document.getElementById('scanBar').style.width = pct + '%';
@@ -348,7 +347,6 @@
 
     if (msg.type === 'scan-result') {
       scanResult = msg;
-      document.getElementById('scanArrow').textContent = '›';
       document.getElementById('findLabel').textContent = 'Find';
       document.getElementById('btnFind').disabled = false;
 
