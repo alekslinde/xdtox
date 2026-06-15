@@ -1,8 +1,12 @@
 {
   "name": "XDtox",
-  "id": "xdtox-plugin",
+  "id": "1648196064868022957",
   "api": "1.0.0",
-  "main": "dist/code.js",
-  "ui": "dist/ui.html",
+  "documentAccess": "dynamic-page",
+  "networkAccess": {
+    "allowedDomains": ["none"]
+  },
+  "main": "code.js",
+  "ui": "ui.html",
   "editorType": ["figma"]
 }
