@@ -53,10 +53,11 @@ const output = html
   .replace('/* INLINE_JS */', js);
 fs.writeFileSync(path.join(root, 'dist', 'ui.html'), output, 'utf-8');
 
-// Save cache buster to manifest file for reference
+// Copy manifest to dist
+const manifest = JSON.parse(fs.readFileSync(path.join(root, 'manifest.json'), 'utf-8'));
 fs.writeFileSync(
   path.join(root, 'dist', 'manifest.json'),
-  JSON.stringify({ cacheBuster: cacheBuster }, null, 2),
+  JSON.stringify(manifest, null, 2),
   'utf-8'
 );
 
