@@ -42,6 +42,8 @@
   .frame-item[data-status="done"] { @apply text-stone-700; }
   .frame-item[data-status="done"] .frame-status { @apply text-emerald-500; }
   .frame-item[data-status="skipped"] .frame-status { @apply text-amber-500; }
+  .frame-item[data-status="review"] { @apply text-orange-600; }
+  .frame-item[data-status="review"] .frame-status { @apply text-orange-500; }
   .frame-item[data-status="error"] { @apply text-red-500; }
   .frame-item[data-status="error"] .frame-status { @apply text-red-500; }
 }
