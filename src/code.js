@@ -28,6 +28,10 @@ const {
 
 figma.showUI(__html__, { width: 380, height: 560, themeColors: true });
 
+// Total budget for the strip animation; per-frame pause scales to fit so large
+// batches stay quick. Kept in sync with estimateStripMs() in ui.js.
+var stripAnimMs = 8000;
+
 // ─── plugin-only logic ────────────────────────────────────────────────────────
 
 function promoteBackgroundFill(frame) {
@@ -88,11 +92,17 @@ function stripXDWrappers(frame) {
     }
   }
 
-  if (clipMask) {
+  // Figma auto-deletes a group as soon as it becomes empty. Moving the content
+  // out empties the inner group (and then the clip group once the mask is gone),
+  // so both may already be removed by the time we get here — guard every remove.
+  if (clipMask && !clipMask.removed) {
     clipMask.remove();
   }
 
-  clipGroup.remove();
+  if (!clipGroup.removed) {
+    clipGroup.remove();
+  }
+
   promoteBackgroundFill(frame);
 
   if (reasons.length > 0) {
@@ -143,6 +153,7 @@ function delay(ms) {
 // user can watch what the plugin is looking through, then return the matches.
 function scanForFrames(scope) {
   return (async function() {
+    var t0 = Date.now();
     var selection = figma.currentPage.selection;
     var useFile = scope === "file";
     var root = useFile ? figma.root : figma.currentPage;
@@ -207,9 +218,11 @@ function scanForFrames(scope) {
     figma.ui.postMessage({
       type: "scan-result",
       count: affected.length,
+      scanned: total,
       frames: affected.map(function(f) { return { id: f.id, name: f.name }; }),
       mode: mode,
       selectionCount: selection.length,
+      scanMs: Date.now() - t0,
     });
   })();
 }
@@ -218,16 +231,27 @@ function scanForFrames(scope) {
 // frame so the panel can show live in-progress / done / error indicators.
 function stripFramesById(ids) {
   return (async function() {
+    var t0 = Date.now();
     var stripped = 0;
     var skipped = 0;
     var errored = 0;
     var needsReview = 0;
 
+    // Bound the whole strip animation to ~stripAnimMs so large batches don't
+    // crawl, while small sets keep a visible per-frame pace. Split ~70/30 into a
+    // pre-pause (lets the in-progress spinner paint) and a post-pause. Keep this
+    // formula in sync with estimateStripMs() in ui.js.
+    var per = ids.length > 0
+      ? Math.max(8, Math.min(130, Math.round(stripAnimMs / ids.length)))
+      : 0;
+    var prePause = Math.round(per * 0.7);
+    var postPause = per - prePause;
+
     for (var i = 0; i < ids.length; i++) {
       var id = ids[i];
       figma.ui.postMessage({ type: "strip-progress", id: id, status: "in-progress" });
       // Yield so the UI can paint the in-progress state before the work runs.
-      await delay(90);
+      await delay(prePause);
 
       try {
         var node = await figma.getNodeByIdAsync(id);
@@ -260,10 +284,10 @@ function stripFramesById(ids) {
         });
       }
 
-      await delay(40);
+      await delay(postPause);
     }
 
-    figma.ui.postMessage({ type: "done", stripped: stripped, skipped: skipped, errored: errored, needsReview: needsReview });
+    figma.ui.postMessage({ type: "done", stripped: stripped, skipped: skipped, errored: errored, needsReview: needsReview, stripMs: Date.now() - t0 });
     var totalCleaned = stripped + needsReview;
     figma.notify(
       totalCleaned > 0
