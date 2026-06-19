@@ -184,6 +184,7 @@ function scanForFrames(scope) {
 
       figma.ui.postMessage({
         type: "scan-progress",
+        id: f.id,
         name: f.name,
         index: i + 1,
         total: total,
