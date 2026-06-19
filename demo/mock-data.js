@@ -7,6 +7,7 @@ const mockFrames = [
   { id: 'frame-3', name: 'Navigation Bar' },
   { id: 'frame-4', name: 'Footer Content' },
   { id: 'frame-5', name: 'Modal Dialog' },
+  { id: 'frame-6', name: 'About Section' },
 ];
 
 function injectMockScanResult() {
@@ -73,26 +74,26 @@ function injectMockScanning() {
 }
 
 function injectMockStripProgress() {
-  // Simulate strip progress updates
-  let index = 0;
-  const statuses = ['in-progress', 'done', 'done', 'error', 'skipped'];
+  // One entry per mockFrame — demonstrates all four result statuses.
+  const frameStatuses = [
+    { status: 'done' },
+    { status: 'done' },
+    { status: 'done' },
+    { status: 'review', reason: 'clip mask missing' },
+    { status: 'error',  reason: 'Structure changed during strip' },
+    { status: 'skipped', reason: 'Already clean' },
+  ];
 
   mockFrames.forEach((frame, idx) => {
     setTimeout(() => {
-      const statusIdx = Math.min(idx, statuses.length - 1);
-      const status = statuses[statusIdx];
-      const reasons = {
-        error: 'Structure changed during strip',
-        skipped: 'Already clean',
-      };
-
+      const s = frameStatuses[idx];
       window.postMessage(
         {
           pluginMessage: {
             type: 'strip-progress',
             id: frame.id,
-            status: status,
-            reason: reasons[status] || undefined,
+            status: s.status,
+            reason: s.reason || undefined,
           },
         },
         '*'
@@ -105,6 +106,7 @@ function injectMockStripProgress() {
               pluginMessage: {
                 type: 'done',
                 stripped: 3,
+                needsReview: 1,
                 skipped: 1,
                 errored: 1,
               },

@@ -1,4 +1,4 @@
-const { isClipPathGroup, isFrameNameGroup, isClipMaskNode, looksLikeXDFrame, isBackgroundVector } = require("./helpers");
+const { isClipPathGroup, isFrameNameGroup, isClipMaskNode, looksLikeXDFrame, isBackgroundVector, reviewReasonsForXDFrame } = require("./helpers");
 
 // ── isClipPathGroup ───────────────────────────────────────────────────────────
 
@@ -120,6 +120,81 @@ describe("looksLikeXDFrame", () => {
     var frame = makeXDFrame("Foo");
     frame.children[0].children = [{ type: "VECTOR", name: "clip-foo" }];
     expect(looksLikeXDFrame(frame)).toBe(false);
+  });
+});
+
+// ── reviewReasonsForXDFrame ───────────────────────────────────────────────────
+
+function makeReviewFrame(frameName, opts) {
+  opts = opts || {};
+  var defaultBounds = { x: 0, y: 0, width: 200, height: 150 };
+  var contentNodes = opts.contentNodes !== undefined ? opts.contentNodes : [
+    { type: "RECTANGLE", name: "bg", absoluteBoundingBox: defaultBounds },
+  ];
+  var clipChildren = [
+    { type: "GROUP", name: frameName, children: contentNodes },
+  ];
+  if (!opts.omitClipMask) {
+    clipChildren.push({ type: "VECTOR", name: "clip-" + frameName.toLowerCase().replace(/\s+/g, "_") });
+  }
+  if (opts.extraChildren) {
+    clipChildren = clipChildren.concat(opts.extraChildren);
+  }
+  return {
+    type: "FRAME",
+    name: frameName,
+    children: [{ type: "GROUP", name: "Clip path group", children: clipChildren }],
+  };
+}
+
+describe("reviewReasonsForXDFrame", () => {
+  it("returns [] for a clean well-formed frame", () => {
+    expect(reviewReasonsForXDFrame(makeReviewFrame("Hero Section"))).toEqual([]);
+  });
+
+  it("flags 'clip mask missing' when no clip-{name} node is present", () => {
+    var frame = makeReviewFrame("Hero Section", { omitClipMask: true });
+    expect(reviewReasonsForXDFrame(frame)).toEqual(["clip mask missing"]);
+  });
+
+  it("flags 'unexpected nodes in clip group' when extra children exist", () => {
+    var frame = makeReviewFrame("Hero Section", {
+      extraChildren: [{ type: "RECTANGLE", name: "stray-rect" }],
+    });
+    expect(reviewReasonsForXDFrame(frame)).toContain("unexpected nodes in clip group");
+  });
+
+  it("flags 'node bounds unavailable' when a content node has no absoluteBoundingBox", () => {
+    var frame = makeReviewFrame("Hero Section", {
+      contentNodes: [{ type: "RECTANGLE", name: "bg", absoluteBoundingBox: null }],
+    });
+    expect(reviewReasonsForXDFrame(frame)).toEqual(["node bounds unavailable"]);
+  });
+
+  it("reports 'node bounds unavailable' only once even when multiple nodes lack bounds", () => {
+    var frame = makeReviewFrame("Hero Section", {
+      contentNodes: [
+        { type: "RECTANGLE", name: "a", absoluteBoundingBox: null },
+        { type: "RECTANGLE", name: "b", absoluteBoundingBox: null },
+      ],
+    });
+    var reasons = reviewReasonsForXDFrame(frame);
+    expect(reasons.filter(function(r) { return r === "node bounds unavailable"; })).toHaveLength(1);
+  });
+
+  it("returns multiple reasons when multiple conditions are present", () => {
+    var frame = makeReviewFrame("Hero Section", {
+      omitClipMask: true,
+      contentNodes: [{ type: "RECTANGLE", name: "bg", absoluteBoundingBox: null }],
+    });
+    var reasons = reviewReasonsForXDFrame(frame);
+    expect(reasons).toContain("clip mask missing");
+    expect(reasons).toContain("node bounds unavailable");
+  });
+
+  it("returns [] when inner group has no content nodes (empty children)", () => {
+    var frame = makeReviewFrame("Hero Section", { contentNodes: [] });
+    expect(reviewReasonsForXDFrame(frame)).toEqual([]);
   });
 });
 

@@ -23,6 +23,7 @@ const {
   isClipMaskNode,
   looksLikeXDFrame,
   isBackgroundVector,
+  reviewReasonsForXDFrame,
 } = require("./helpers");
 
 figma.showUI(__html__, { width: 380, height: 560, themeColors: true });
@@ -72,6 +73,7 @@ function stripXDWrappers(frame) {
 
   if (contentNodes.length === 0) return { skipped: true, reason: "empty" };
 
+  var reasons = reviewReasonsForXDFrame(frame);
   var frameAbs = frame.absoluteBoundingBox;
 
   for (var k = 0; k < contentNodes.length; k++) {
@@ -94,6 +96,10 @@ function stripXDWrappers(frame) {
 
   clipGroup.remove();
   promoteBackgroundFill(frame);
+
+  if (reasons.length > 0) {
+    return { stripped: true, needsReview: true, reason: reasons.join("; ") };
+  }
 
   return { stripped: true };
 }
@@ -198,6 +204,7 @@ function stripFramesById(ids) {
     var stripped = 0;
     var skipped = 0;
     var errored = 0;
+    var needsReview = 0;
 
     for (var i = 0; i < ids.length; i++) {
       var id = ids[i];
@@ -215,8 +222,13 @@ function stripFramesById(ids) {
 
         var result = stripXDWrappers(node);
         if (result.stripped) {
-          stripped++;
-          figma.ui.postMessage({ type: "strip-progress", id: id, status: "done" });
+          if (result.needsReview) {
+            needsReview++;
+            figma.ui.postMessage({ type: "strip-progress", id: id, status: "review", reason: result.reason });
+          } else {
+            stripped++;
+            figma.ui.postMessage({ type: "strip-progress", id: id, status: "done" });
+          }
         } else {
           skipped++;
           figma.ui.postMessage({ type: "strip-progress", id: id, status: "skipped", reason: result.reason || "no XD wrapper" });
@@ -234,10 +246,12 @@ function stripFramesById(ids) {
       await delay(40);
     }
 
-    figma.ui.postMessage({ type: "done", stripped: stripped, skipped: skipped, errored: errored });
+    figma.ui.postMessage({ type: "done", stripped: stripped, skipped: skipped, errored: errored, needsReview: needsReview });
+    var totalCleaned = stripped + needsReview;
     figma.notify(
-      stripped > 0
-        ? "✶ XDtox: cleaned " + stripped + " frame" + (stripped !== 1 ? "s" : "") +
+      totalCleaned > 0
+        ? "✶ XDtox: cleaned " + totalCleaned + " frame" + (totalCleaned !== 1 ? "s" : "") +
+          (needsReview > 0 ? ", " + needsReview + " need" + (needsReview !== 1 ? "" : "s") + " review" : "") +
           (skipped > 0 ? ", skipped " + skipped : "") +
           (errored > 0 ? ", " + errored + " failed" : "")
         : (errored > 0
