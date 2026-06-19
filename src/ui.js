@@ -218,6 +218,7 @@ window.onmessage = function(event) {
     if (st) {
       if (msg.status === 'in-progress')  st.innerHTML = '<span class="spin">◌</span>';
       else if (msg.status === 'done')    st.textContent = '✓';
+      else if (msg.status === 'review')  st.textContent = '!';
       else if (msg.status === 'error')   st.textContent = '✕';
       else if (msg.status === 'skipped') st.textContent = '–';
       else                               st.textContent = '·';
@@ -232,14 +233,17 @@ window.onmessage = function(event) {
 
     var parts = [];
     parts.push(msg.stripped + ' stripped');
+    if (msg.needsReview) parts.push(msg.needsReview + (msg.needsReview === 1 ? ' needs' : ' need') + ' review');
     if (msg.skipped) parts.push(msg.skipped + ' skipped');
     if (msg.errored) parts.push(msg.errored + ' failed');
 
-    var ok = !msg.errored;
+    var hasError  = !!msg.errored;
+    var hasReview = !!msg.needsReview;
     summary.textContent = parts.join('  ·  ');
     summary.className = 'text-[10px] text-center px-3.5 py-3 rounded-sm border leading-relaxed ' +
-      (ok ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
-          : 'bg-amber-50 border-amber-100 text-amber-700');
+      (hasError  ? 'bg-amber-50 border-amber-100 text-amber-700'
+      : hasReview ? 'bg-orange-50 border-orange-100 text-orange-700'
+                  : 'bg-emerald-50 border-emerald-100 text-emerald-700');
 
     summary.classList.remove('hidden');
     scanResult = null;

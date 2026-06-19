@@ -55,4 +55,40 @@ function isBackgroundVector(node, frame) {
   return coversWidth && coversHeight && alignedX && alignedY;
 }
 
-module.exports = { isClipPathGroup, isFrameNameGroup, isClipMaskNode, looksLikeXDFrame, isBackgroundVector };
+// Returns an array of reason strings for a frame that passes looksLikeXDFrame
+// but has structural anomalies that warrant a manual check after stripping.
+// Caller must ensure looksLikeXDFrame(frame) is true before calling.
+function reviewReasonsForXDFrame(frame) {
+  var reasons = [];
+  var clipGroup = frame.children[0];
+  var innerGroup = null;
+  var hasClipMask = false;
+  var unexpectedCount = 0;
+
+  for (var i = 0; i < clipGroup.children.length; i++) {
+    var child = clipGroup.children[i];
+    if (isFrameNameGroup(child, frame.name)) {
+      innerGroup = child;
+    } else if (isClipMaskNode(child, frame.name)) {
+      hasClipMask = true;
+    } else {
+      unexpectedCount++;
+    }
+  }
+
+  if (!hasClipMask) reasons.push("clip mask missing");
+  if (unexpectedCount > 0) reasons.push("unexpected nodes in clip group");
+
+  if (innerGroup) {
+    for (var j = 0; j < innerGroup.children.length; j++) {
+      if (!innerGroup.children[j].absoluteBoundingBox) {
+        reasons.push("node bounds unavailable");
+        break;
+      }
+    }
+  }
+
+  return reasons;
+}
+
+module.exports = { isClipPathGroup, isFrameNameGroup, isClipMaskNode, looksLikeXDFrame, isBackgroundVector, reviewReasonsForXDFrame };
