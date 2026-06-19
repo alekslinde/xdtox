@@ -3,6 +3,20 @@
 var scanResult = null;
 var currentScope = 'page';
 
+// Estimated hands-on time a senior designer spends un-wrapping one XD frame by
+// hand (locate, select clip group, ungroup, reposition content, delete the mask,
+// QA), including context-switching.
+var MANUAL_SECONDS_PER_FRAME = 180;
+var WORKDAY_HOURS = 8;
+
+// Estimated strip-run duration. Mirrors the bounded per-frame pace in
+// stripFramesById() (code.js) — keep stripAnimMs / bounds in sync.
+function estimateStripMs(count) {
+  if (count <= 0) return 0;
+  var per = Math.max(8, Math.min(130, Math.round(8000 / count)));
+  return per * count;
+}
+
 var LOCATE_ICON = '<svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M10.4705 10.4706V11.4706H2.52932V10.4706H10.4705ZM10.4705 2.52939H2.52932V11.4706L2.42679 11.4647C1.95616 11.4168 1.58181 11.0429 1.53423 10.5722L1.52935 10.4706V2.52939C1.52935 1.97712 1.97705 1.52941 2.52932 1.52941H10.4705L10.5721 1.5343C11.0766 1.58529 11.4705 2.01147 11.4705 2.52939V10.4706L11.4647 10.5722C11.417 11.0431 11.0431 11.4171 10.5721 11.4647L10.4705 11.4706V2.52939Z" fill="currentColor"/><path d="M5.35292 5.35294H7.64704V7.64706H5.35292V5.35294Z" fill="currentColor"/><path d="M3.82353 6.11765V6.88235H0L3.34264e-08 6.11765H3.82353Z" fill="currentColor"/><path d="M13 6.11765V6.88235H9.17643V6.11765H13Z" fill="currentColor"/><path d="M6.88231 13H6.1176V9.17647H6.88231V13Z" fill="currentColor"/><path d="M6.88231 3.82353H6.1176V0L6.88231 6.68527e-08V3.82353Z" fill="currentColor"/></svg>';
 
 var LIST_CLASS_FULL  = 'flex-1 overflow-y-auto mx-5 mb-3 border border-stone-200 bg-white divide-y divide-stone-100 min-h-0';
@@ -67,6 +81,8 @@ function doSearchAgain() {
   document.getElementById('findLabel').textContent = 'Find';
   document.getElementById('btnFind').disabled = false;
   document.getElementById('stripSummary').classList.add('hidden');
+  document.getElementById('fteBreakdown').classList.add('hidden');
+  document.getElementById('resultsMeta').classList.add('hidden');
   document.getElementById('btnStrip').classList.remove('hidden');
   showView('viewInitial');
 }
@@ -172,6 +188,15 @@ window.onmessage = function(event) {
 
     heading.textContent = 'Scan report';
 
+    var meta = document.getElementById('resultsMeta');
+    if (msg.count > 0) {
+      meta.textContent = 'Scanned ' + (msg.scanned || msg.count) + ' in ' + fmtDuration(msg.scanMs || 0) +
+        ' · ~' + fmtDuration(estimateStripMs(msg.count)) + ' to strip ' + msg.count;
+      meta.classList.remove('hidden');
+    } else {
+      meta.classList.add('hidden');
+    }
+
     if (msg.count === 0) {
       headingWrap.classList.add('hidden');
       stripBtn.classList.add('hidden');
@@ -252,6 +277,40 @@ window.onmessage = function(event) {
                   : 'bg-emerald-50 border-emerald-100 text-emerald-700');
 
     summary.classList.remove('hidden');
+
+    // Update the meta line with the actual strip time.
+    var meta = document.getElementById('resultsMeta');
+    if (typeof msg.stripMs === 'number') {
+      meta.textContent = 'Stripped in ' + fmtDuration(msg.stripMs);
+      meta.classList.remove('hidden');
+    }
+
+    // Senior-designer FTE breakdown: what cleaning these by hand would cost.
+    var fte = document.getElementById('fteBreakdown');
+    var cleaned = (msg.stripped || 0) + (msg.needsReview || 0);
+    if (cleaned > 0) {
+      var manualSeconds = cleaned * MANUAL_SECONDS_PER_FRAME;
+      var fteDays = manualSeconds / 3600 / WORKDAY_HOURS;
+      var daysLabel = fteDays >= 0.1
+        ? (Math.round(fteDays * 10) / 10) + ' designer-day' + (fteDays >= 2 ? 's' : '')
+        : '< 0.1 designer-days';
+
+      var perFrameMin = Math.round(MANUAL_SECONDS_PER_FRAME / 60 * 10) / 10;
+      fte.innerHTML =
+        '<div class="text-[9px] uppercase tracking-widest text-stone-400 mb-2">Manual equivalent</div>' +
+        '<div class="font-display font-bold text-[22px] leading-none tracking-tight text-stone-900 mb-1">' +
+          '≈ ' + daysLabel +
+        '</div>' +
+        '<div class="text-[10px] text-stone-500 mb-3">of senior-designer time saved</div>' +
+        '<div class="flex flex-col gap-1 text-[10px] text-stone-600">' +
+          fteRow(cleaned + ' frame' + (cleaned !== 1 ? 's' : '') + ' × ~' + perFrameMin + ' min', fmtEffort(manualSeconds)) +
+          fteRow('XDtox did it in', fmtDuration(msg.stripMs || 0)) +
+        '</div>';
+      fte.classList.remove('hidden');
+    } else {
+      fte.classList.add('hidden');
+    }
+
     scanResult = null;
   }
 };
@@ -264,6 +323,33 @@ function escHtml(s) {
 
 function escAttr(s) {
   return String(s).replace(/'/g, '&#39;');
+}
+
+// Human-friendly duration from a millisecond count.
+function fmtDuration(ms) {
+  var sec = ms / 1000;
+  if (sec < 1)  return (Math.round(sec * 100) / 100) + 's';
+  if (sec < 10) return (Math.round(sec * 10) / 10) + 's';
+  if (sec < 60) return Math.round(sec) + 's';
+  var m = Math.floor(sec / 60), s = Math.round(sec % 60);
+  if (m < 60) return m + 'm ' + (s ? s + 's' : '').trim();
+  var h = Math.floor(m / 60); m = m % 60;
+  return h + 'h ' + (m ? m + 'm' : '').trim();
+}
+
+// Human-friendly manual effort from a second count (hours / working days).
+function fmtEffort(totalSeconds) {
+  var hours = totalSeconds / 3600;
+  if (hours < 1) return Math.round(totalSeconds / 60) + ' min';
+  return (Math.round(hours * 10) / 10) + ' hr' + (hours >= 2 ? 's' : '');
+}
+
+// One label/value line in the FTE breakdown.
+function fteRow(label, value) {
+  return '<div class="flex justify-between gap-3">' +
+    '<span>' + escHtml(label) + '</span>' +
+    '<span class="font-bold text-stone-900 whitespace-nowrap">' + escHtml(value) + '</span>' +
+    '</div>';
 }
 
 function setScanStatus(text, busy) {
