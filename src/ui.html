@@ -79,6 +79,10 @@
     <!-- Title -->
     <div class="px-5 pt-4 pb-2 shrink-0">
       <span class="font-display font-bold text-[18px] leading-none tracking-tight text-stone-900">Scan in progress</span>
+      <div id="scanStatus" class="flex items-center gap-1.5 mt-1.5 text-[10px] text-stone-500">
+        <span class="spin">◌</span>
+        <span id="scanStatusText">Preparing…</span>
+      </div>
     </div>
 
     <!-- Live hit list — same structure as results, populates in real-time -->
@@ -111,6 +115,7 @@
     <!-- Count heading -->
     <div id="resultsHeadingWrap" class="px-5 pt-4 pb-2 shrink-0">
       <span id="resultsHeading" class="font-display font-bold text-[18px] leading-none tracking-tight text-stone-900"></span>
+      <div id="resultsMeta" class="hidden mt-1 text-[9px] uppercase tracking-widest text-stone-400"></div>
     </div>
 
     <!-- Frame list -->
@@ -122,6 +127,9 @@
     <div class="px-5 pb-4 flex flex-col gap-2 shrink-0">
       <div id="stripSummary"
         class="hidden text-[10px] text-center px-3.5 py-3 rounded-sm border leading-relaxed"></div>
+
+      <div id="fteBreakdown"
+        class="hidden rounded-sm border border-stone-200 bg-stone-50 px-4 py-3.5"></div>
 
       <button id="btnStrip" onclick="doStrip()"
         class="w-full bg-stone-900 text-white font-display font-bold text-[13px] tracking-tight

@@ -2,6 +2,27 @@
 
 var scanResult = null;
 var currentScope = 'page';
+var stripStartedAt = 0;
+var stripTotal = 0;
+var stripProcessed = 0;
+
+// Estimated hands-on time a senior designer spends un-wrapping one XD frame by
+// hand (locate, select clip group, ungroup, reposition content, delete the mask,
+// QA), including context-switching.
+var MANUAL_SECONDS_PER_FRAME = 180;
+var WORKDAY_HOURS = 8;
+
+// Rough per-frame strip duration for the up-front estimate: the bounded
+// animation pause (mirrors stripFramesById() in code.js) plus an allowance for
+// the real work each frame costs — an async getNodeByIdAsync round-trip and
+// reparenting its content nodes. It's only a ballpark; the live ETA during the
+// run (which measures actual throughput) is what users should trust.
+var STRIP_COMPUTE_MS_PER_FRAME = 35;
+function estimateStripMs(count) {
+  if (count <= 0) return 0;
+  var animPer = Math.max(8, Math.min(130, Math.round(8000 / count)));
+  return count * (animPer + STRIP_COMPUTE_MS_PER_FRAME);
+}
 
 var LOCATE_ICON = '<svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M10.4705 10.4706V11.4706H2.52932V10.4706H10.4705ZM10.4705 2.52939H2.52932V11.4706L2.42679 11.4647C1.95616 11.4168 1.58181 11.0429 1.53423 10.5722L1.52935 10.4706V2.52939C1.52935 1.97712 1.97705 1.52941 2.52932 1.52941H10.4705L10.5721 1.5343C11.0766 1.58529 11.4705 2.01147 11.4705 2.52939V10.4706L11.4647 10.5722C11.417 11.0431 11.0431 11.4171 10.5721 11.4647L10.4705 11.4706V2.52939Z" fill="currentColor"/><path d="M5.35292 5.35294H7.64704V7.64706H5.35292V5.35294Z" fill="currentColor"/><path d="M3.82353 6.11765V6.88235H0L3.34264e-08 6.11765H3.82353Z" fill="currentColor"/><path d="M13 6.11765V6.88235H9.17643V6.11765H13Z" fill="currentColor"/><path d="M6.88231 13H6.1176V9.17647H6.88231V13Z" fill="currentColor"/><path d="M6.88231 3.82353H6.1176V0L6.88231 6.68527e-08V3.82353Z" fill="currentColor"/></svg>';
 
@@ -56,6 +77,7 @@ function doFind() {
   document.getElementById('scanCount').textContent = '0 / 0';
   document.getElementById('scanFound').textContent = '0 found';
   document.getElementById('scanFound').className = 'text-stone-500 font-bold';
+  setScanStatus('Preparing…', true);
   showView('viewScanning');
 
   parent.postMessage({ pluginMessage: { type: 'scan', scope: currentScope } }, '*');
@@ -66,6 +88,8 @@ function doSearchAgain() {
   document.getElementById('findLabel').textContent = 'Find';
   document.getElementById('btnFind').disabled = false;
   document.getElementById('stripSummary').classList.add('hidden');
+  document.getElementById('fteBreakdown').classList.add('hidden');
+  document.getElementById('resultsMeta').classList.add('hidden');
   document.getElementById('btnStrip').classList.remove('hidden');
   showView('viewInitial');
 }
@@ -84,6 +108,13 @@ function doStrip() {
   var btn = document.getElementById('btnStrip');
   btn.disabled = true;
   document.getElementById('stripLabel').textContent = 'Stripping…';
+
+  stripStartedAt = Date.now();
+  stripTotal = ids.length;
+  stripProcessed = 0;
+  var meta = document.getElementById('resultsMeta');
+  meta.textContent = 'Stripping 0 / ' + stripTotal + '…';
+  meta.classList.remove('hidden');
 
   parent.postMessage({ pluginMessage: { type: 'strip', ids: ids } }, '*');
 }
@@ -112,7 +143,12 @@ window.onmessage = function(event) {
   var msg = event.data.pluginMessage;
   if (!msg) return;
 
+  if (msg.type === 'scan-status') {
+    setScanStatus(msg.text, true);
+  }
+
   if (msg.type === 'scan-start') {
+    setScanStatus('Scanning ' + msg.total + ' frame' + (msg.total !== 1 ? 's' : '') + '…', true);
     document.getElementById('scanList').innerHTML = '';
     document.getElementById('scanBar').style.width = '0%';
     document.getElementById('scanCount').textContent = '0 / ' + msg.total;
@@ -166,6 +202,15 @@ window.onmessage = function(event) {
 
     heading.textContent = 'Scan report';
 
+    var meta = document.getElementById('resultsMeta');
+    if (msg.count > 0) {
+      meta.textContent = 'Scanned ' + (msg.scanned || msg.count) + ' in ' + fmtDuration(msg.scanMs || 0) +
+        ' · ~' + fmtDuration(estimateStripMs(msg.count)) + ' to strip ' + msg.count;
+      meta.classList.remove('hidden');
+    } else {
+      meta.classList.add('hidden');
+    }
+
     if (msg.count === 0) {
       headingWrap.classList.add('hidden');
       stripBtn.classList.add('hidden');
@@ -218,9 +263,24 @@ window.onmessage = function(event) {
     if (st) {
       if (msg.status === 'in-progress')  st.innerHTML = '<span class="spin">◌</span>';
       else if (msg.status === 'done')    st.textContent = '✓';
+      else if (msg.status === 'review')  st.textContent = '!';
       else if (msg.status === 'error')   st.textContent = '✕';
       else if (msg.status === 'skipped') st.textContent = '–';
       else                               st.textContent = '·';
+    }
+
+    // Live, self-correcting ETA from measured throughput (terminal events only).
+    if (msg.status !== 'in-progress' && stripTotal > 0) {
+      stripProcessed++;
+      var elapsed = Date.now() - stripStartedAt;
+      var remaining = Math.max(0, stripTotal - stripProcessed);
+      var meta = document.getElementById('resultsMeta');
+      var etaTxt = '';
+      if (stripProcessed > 0 && remaining > 0) {
+        etaTxt = ' · ~' + fmtDuration(remaining * (elapsed / stripProcessed)) + ' left';
+      }
+      meta.textContent = 'Stripping ' + stripProcessed + ' / ' + stripTotal + etaTxt;
+      meta.classList.remove('hidden');
     }
   }
 
@@ -232,16 +292,53 @@ window.onmessage = function(event) {
 
     var parts = [];
     parts.push(msg.stripped + ' stripped');
+    if (msg.needsReview) parts.push(msg.needsReview + (msg.needsReview === 1 ? ' needs' : ' need') + ' review');
     if (msg.skipped) parts.push(msg.skipped + ' skipped');
     if (msg.errored) parts.push(msg.errored + ' failed');
 
-    var ok = !msg.errored;
+    var hasError  = !!msg.errored;
+    var hasReview = !!msg.needsReview;
     summary.textContent = parts.join('  ·  ');
     summary.className = 'text-[10px] text-center px-3.5 py-3 rounded-sm border leading-relaxed ' +
-      (ok ? 'bg-emerald-50 border-emerald-100 text-emerald-700'
-          : 'bg-amber-50 border-amber-100 text-amber-700');
+      (hasError  ? 'bg-amber-50 border-amber-100 text-amber-700'
+      : hasReview ? 'bg-orange-50 border-orange-100 text-orange-700'
+                  : 'bg-emerald-50 border-emerald-100 text-emerald-700');
 
     summary.classList.remove('hidden');
+
+    // Update the meta line with the actual strip time.
+    var meta = document.getElementById('resultsMeta');
+    if (typeof msg.stripMs === 'number') {
+      meta.textContent = 'Stripped in ' + fmtDuration(msg.stripMs);
+      meta.classList.remove('hidden');
+    }
+
+    // Senior-designer FTE breakdown: what cleaning these by hand would cost.
+    var fte = document.getElementById('fteBreakdown');
+    var cleaned = (msg.stripped || 0) + (msg.needsReview || 0);
+    if (cleaned > 0) {
+      var manualSeconds = cleaned * MANUAL_SECONDS_PER_FRAME;
+      var fteDays = manualSeconds / 3600 / WORKDAY_HOURS;
+      var daysLabel = fteDays >= 0.1
+        ? (Math.round(fteDays * 10) / 10) + ' designer-day' + (fteDays >= 2 ? 's' : '')
+        : '< 0.1 designer-days';
+
+      var perFrameMin = Math.round(MANUAL_SECONDS_PER_FRAME / 60 * 10) / 10;
+      fte.innerHTML =
+        '<div class="text-[9px] uppercase tracking-widest text-stone-400 mb-2">Manual equivalent</div>' +
+        '<div class="font-display font-bold text-[22px] leading-none tracking-tight text-stone-900 mb-1">' +
+          '≈ ' + daysLabel +
+        '</div>' +
+        '<div class="text-[10px] text-stone-500 mb-3">of senior-designer time saved</div>' +
+        '<div class="flex flex-col gap-1 text-[10px] text-stone-600">' +
+          fteRow(cleaned + ' frame' + (cleaned !== 1 ? 's' : '') + ' × ~' + perFrameMin + ' min', fmtEffort(manualSeconds)) +
+          fteRow('XDtox did it in', fmtDuration(msg.stripMs || 0)) +
+        '</div>';
+      fte.classList.remove('hidden');
+    } else {
+      fte.classList.add('hidden');
+    }
+
     scanResult = null;
   }
 };
@@ -254,6 +351,43 @@ function escHtml(s) {
 
 function escAttr(s) {
   return String(s).replace(/'/g, '&#39;');
+}
+
+// Human-friendly duration from a millisecond count.
+function fmtDuration(ms) {
+  var sec = ms / 1000;
+  if (sec < 1)  return (Math.round(sec * 100) / 100) + 's';
+  if (sec < 10) return (Math.round(sec * 10) / 10) + 's';
+  if (sec < 60) return Math.round(sec) + 's';
+  var m = Math.floor(sec / 60), s = Math.round(sec % 60);
+  if (m < 60) return m + 'm ' + (s ? s + 's' : '').trim();
+  var h = Math.floor(m / 60); m = m % 60;
+  return h + 'h ' + (m ? m + 'm' : '').trim();
+}
+
+// Human-friendly manual effort from a second count (hours / working days).
+function fmtEffort(totalSeconds) {
+  var hours = totalSeconds / 3600;
+  if (hours < 1) return Math.round(totalSeconds / 60) + ' min';
+  return (Math.round(hours * 10) / 10) + ' hr' + (hours >= 2 ? 's' : '');
+}
+
+// One label/value line in the FTE breakdown.
+function fteRow(label, value) {
+  return '<div class="flex justify-between gap-3">' +
+    '<span>' + escHtml(label) + '</span>' +
+    '<span class="font-bold text-stone-900 whitespace-nowrap">' + escHtml(value) + '</span>' +
+    '</div>';
+}
+
+function setScanStatus(text, busy) {
+  var wrap = document.getElementById('scanStatus');
+  var label = document.getElementById('scanStatusText');
+  if (label) label.textContent = text;
+  if (wrap) {
+    var spinner = wrap.querySelector('.spin');
+    if (spinner) spinner.style.visibility = busy ? 'visible' : 'hidden';
+  }
 }
 
 // ── Resize ────────────────────────────────────────────────────────────────────
