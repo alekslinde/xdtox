@@ -1,4 +1,4 @@
-const { isClipPathGroup, isFrameNameGroup, isClipMaskNode, looksLikeXDFrame, isBackgroundVector, reviewReasonsForXDFrame } = require("./helpers");
+const { isClipPathGroup, isClipMaskNode, innerContentGroup, looksLikeXDFrame, isBackgroundVector, reviewReasonsForXDFrame } = require("./helpers");
 
 // ── isClipPathGroup ───────────────────────────────────────────────────────────
 
@@ -24,47 +24,42 @@ describe("isClipPathGroup", () => {
   });
 });
 
-// ── isFrameNameGroup ──────────────────────────────────────────────────────────
-
-describe("isFrameNameGroup", () => {
-  it("returns true when the GROUP name matches the frame name", () => {
-    expect(isFrameNameGroup({ type: "GROUP", name: "Hero Section" }, "Hero Section")).toBe(true);
-  });
-
-  it("is case-insensitive", () => {
-    expect(isFrameNameGroup({ type: "GROUP", name: "hero section" }, "Hero Section")).toBe(true);
-  });
-
-  it("returns false for a non-GROUP node", () => {
-    expect(isFrameNameGroup({ type: "FRAME", name: "Hero Section" }, "Hero Section")).toBe(false);
-  });
-
-  it("returns false when names differ", () => {
-    expect(isFrameNameGroup({ type: "GROUP", name: "Other" }, "Hero Section")).toBe(false);
-  });
-});
-
 // ── isClipMaskNode ────────────────────────────────────────────────────────────
 
 describe("isClipMaskNode", () => {
-  it("returns true when node name is 'clip-{frame_name_underscored}'", () => {
-    expect(isClipMaskNode({ name: "clip-hero_section" }, "Hero Section")).toBe(true);
+  it("returns true for any node whose name starts with 'clip-'", () => {
+    expect(isClipMaskNode({ name: "clip-hero_section" })).toBe(true);
+    expect(isClipMaskNode({ name: "clip-SF_I_-_Landing" })).toBe(true);
   });
 
-  it("returns true when node name is 'clip-{frame-name-dashed}'", () => {
-    expect(isClipMaskNode({ name: "clip-hero-section" }, "Hero Section")).toBe(true);
+  it("is case-insensitive and trims whitespace", () => {
+    expect(isClipMaskNode({ name: "  CLIP-Foo  " })).toBe(true);
   });
 
   it("returns false when name doesn't start with 'clip-'", () => {
-    expect(isClipMaskNode({ name: "mask-hero_section" }, "Hero Section")).toBe(false);
+    expect(isClipMaskNode({ name: "mask-hero_section" })).toBe(false);
+    expect(isClipMaskNode({ name: "Hero Section" })).toBe(false);
+  });
+});
+
+// ── innerContentGroup ─────────────────────────────────────────────────────────
+
+describe("innerContentGroup", () => {
+  it("returns the GROUP child that is not the clip mask", () => {
+    var content = { type: "GROUP", name: "SF/I - Landing" };
+    var clipGroup = { children: [{ type: "GROUP", name: "clip-SF_I_-_Landing" }, content] };
+    expect(innerContentGroup(clipGroup)).toBe(content);
   });
 
-  it("returns false when the suffix doesn't match the frame name", () => {
-    expect(isClipMaskNode({ name: "clip-other_name" }, "Hero Section")).toBe(false);
+  it("ignores the clip mask even when it is itself a GROUP", () => {
+    var content = { type: "GROUP", name: "One last check" };
+    var clipGroup = { children: [{ type: "GROUP", name: "clip-One_last_check" }, content] };
+    expect(innerContentGroup(clipGroup)).toBe(content);
   });
 
-  it("handles single-word frame names", () => {
-    expect(isClipMaskNode({ name: "clip-home" }, "Home")).toBe(true);
+  it("returns null when there is no non-clip group", () => {
+    var clipGroup = { children: [{ type: "GROUP", name: "clip-foo" }, { type: "VECTOR", name: "x" }] };
+    expect(innerContentGroup(clipGroup)).toBe(null);
   });
 });
 
@@ -116,10 +111,28 @@ describe("looksLikeXDFrame", () => {
     expect(looksLikeXDFrame(frame)).toBe(false);
   });
 
-  it("returns false when clip path group has no inner group matching frame name", () => {
+  it("returns false when clip path group has only a clip mask and no content group", () => {
     var frame = makeXDFrame("Foo");
     frame.children[0].children = [{ type: "VECTOR", name: "clip-foo" }];
     expect(looksLikeXDFrame(frame)).toBe(false);
+  });
+
+  it("matches regardless of how Figma mangled the frame name vs the inner group", () => {
+    // Real cases: frame name diverges from the content group name (slash→dash,
+    // inserted -1, dedup suffix). Detection must not depend on them matching.
+    var frame = {
+      type: "FRAME",
+      name: "SF-I - Landing 1",
+      children: [{
+        type: "GROUP",
+        name: "Clip path group",
+        children: [
+          { type: "GROUP", name: "clip-SF_I_-_Landing" },
+          { type: "GROUP", name: "SF/I - Landing" },
+        ],
+      }],
+    };
+    expect(looksLikeXDFrame(frame)).toBe(true);
   });
 });
 
