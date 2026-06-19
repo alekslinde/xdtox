@@ -2,6 +2,9 @@
 
 var scanResult = null;
 var currentScope = 'page';
+var stripStartedAt = 0;
+var stripTotal = 0;
+var stripProcessed = 0;
 
 // Estimated hands-on time a senior designer spends un-wrapping one XD frame by
 // hand (locate, select clip group, ungroup, reposition content, delete the mask,
@@ -9,12 +12,16 @@ var currentScope = 'page';
 var MANUAL_SECONDS_PER_FRAME = 180;
 var WORKDAY_HOURS = 8;
 
-// Estimated strip-run duration. Mirrors the bounded per-frame pace in
-// stripFramesById() (code.js) — keep stripAnimMs / bounds in sync.
+// Rough per-frame strip duration for the up-front estimate: the bounded
+// animation pause (mirrors stripFramesById() in code.js) plus an allowance for
+// the real work each frame costs — an async getNodeByIdAsync round-trip and
+// reparenting its content nodes. It's only a ballpark; the live ETA during the
+// run (which measures actual throughput) is what users should trust.
+var STRIP_COMPUTE_MS_PER_FRAME = 35;
 function estimateStripMs(count) {
   if (count <= 0) return 0;
-  var per = Math.max(8, Math.min(130, Math.round(8000 / count)));
-  return per * count;
+  var animPer = Math.max(8, Math.min(130, Math.round(8000 / count)));
+  return count * (animPer + STRIP_COMPUTE_MS_PER_FRAME);
 }
 
 var LOCATE_ICON = '<svg width="13" height="13" viewBox="0 0 13 13" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M10.4705 10.4706V11.4706H2.52932V10.4706H10.4705ZM10.4705 2.52939H2.52932V11.4706L2.42679 11.4647C1.95616 11.4168 1.58181 11.0429 1.53423 10.5722L1.52935 10.4706V2.52939C1.52935 1.97712 1.97705 1.52941 2.52932 1.52941H10.4705L10.5721 1.5343C11.0766 1.58529 11.4705 2.01147 11.4705 2.52939V10.4706L11.4647 10.5722C11.417 11.0431 11.0431 11.4171 10.5721 11.4647L10.4705 11.4706V2.52939Z" fill="currentColor"/><path d="M5.35292 5.35294H7.64704V7.64706H5.35292V5.35294Z" fill="currentColor"/><path d="M3.82353 6.11765V6.88235H0L3.34264e-08 6.11765H3.82353Z" fill="currentColor"/><path d="M13 6.11765V6.88235H9.17643V6.11765H13Z" fill="currentColor"/><path d="M6.88231 13H6.1176V9.17647H6.88231V13Z" fill="currentColor"/><path d="M6.88231 3.82353H6.1176V0L6.88231 6.68527e-08V3.82353Z" fill="currentColor"/></svg>';
@@ -101,6 +108,13 @@ function doStrip() {
   var btn = document.getElementById('btnStrip');
   btn.disabled = true;
   document.getElementById('stripLabel').textContent = 'Stripping…';
+
+  stripStartedAt = Date.now();
+  stripTotal = ids.length;
+  stripProcessed = 0;
+  var meta = document.getElementById('resultsMeta');
+  meta.textContent = 'Stripping 0 / ' + stripTotal + '…';
+  meta.classList.remove('hidden');
 
   parent.postMessage({ pluginMessage: { type: 'strip', ids: ids } }, '*');
 }
@@ -253,6 +267,20 @@ window.onmessage = function(event) {
       else if (msg.status === 'error')   st.textContent = '✕';
       else if (msg.status === 'skipped') st.textContent = '–';
       else                               st.textContent = '·';
+    }
+
+    // Live, self-correcting ETA from measured throughput (terminal events only).
+    if (msg.status !== 'in-progress' && stripTotal > 0) {
+      stripProcessed++;
+      var elapsed = Date.now() - stripStartedAt;
+      var remaining = Math.max(0, stripTotal - stripProcessed);
+      var meta = document.getElementById('resultsMeta');
+      var etaTxt = '';
+      if (stripProcessed > 0 && remaining > 0) {
+        etaTxt = ' · ~' + fmtDuration(remaining * (elapsed / stripProcessed)) + ' left';
+      }
+      meta.textContent = 'Stripping ' + stripProcessed + ' / ' + stripTotal + etaTxt;
+      meta.classList.remove('hidden');
     }
   }
 
