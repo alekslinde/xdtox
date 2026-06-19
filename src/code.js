@@ -106,13 +106,13 @@ function stripXDWrappers(frame) {
 
 // ─── message handler ──────────────────────────────────────────────────────────
 
-figma.ui.onmessage = function(msg) {
+figma.ui.onmessage = async function(msg) {
   if (msg.type === "scan") {
     scanForFrames(msg.scope);
   }
 
   if (msg.type === "locate") {
-    var node = figma.getNodeById(msg.id);
+    var node = await figma.getNodeByIdAsync(msg.id);
     if (node) {
       // Walk up to the node's owning page; it may differ from the
       // current page when scanning the whole file.
@@ -148,6 +148,12 @@ function scanForFrames(scope) {
     var selection = figma.currentPage.selection;
     var useFile = scope === "file";
     var root = useFile ? figma.root : figma.currentPage;
+
+    // Whole-file search requires every page to be loaded first when the
+    // plugin runs with documentAccess: "dynamic-page".
+    if (useFile) {
+      await figma.loadAllPagesAsync();
+    }
 
     var candidates;
     var mode;
@@ -213,7 +219,7 @@ function stripFramesById(ids) {
       await delay(90);
 
       try {
-        var node = figma.getNodeById(id);
+        var node = await figma.getNodeByIdAsync(id);
         if (!node || (node.type !== "FRAME" && node.type !== "COMPONENT")) {
           skipped++;
           figma.ui.postMessage({ type: "strip-progress", id: id, status: "skipped", reason: "not found" });
