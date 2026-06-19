@@ -19,8 +19,8 @@
 
 const {
   isClipPathGroup,
-  isFrameNameGroup,
   isClipMaskNode,
+  innerContentGroup,
   looksLikeXDFrame,
   isBackgroundVector,
   reviewReasonsForXDFrame,
@@ -52,14 +52,12 @@ function stripXDWrappers(frame) {
   if (!looksLikeXDFrame(frame)) return { skipped: true };
 
   var clipGroup = frame.children[0];
-  var innerGroup = null;
+  var innerGroup = innerContentGroup(clipGroup);
   var clipMask = null;
 
   for (var i = 0; i < clipGroup.children.length; i++) {
     var child = clipGroup.children[i];
-    if (isFrameNameGroup(child, frame.name)) {
-      innerGroup = child;
-    } else if (isClipMaskNode(child, frame.name)) {
+    if (child !== innerGroup && isClipMaskNode(child)) {
       clipMask = child;
     }
   }
@@ -149,25 +147,37 @@ function scanForFrames(scope) {
     var useFile = scope === "file";
     var root = useFile ? figma.root : figma.currentPage;
 
+    function status(text) {
+      figma.ui.postMessage({ type: "scan-status", text: text });
+    }
+
     // Whole-file search requires every page to be loaded first when the
-    // plugin runs with documentAccess: "dynamic-page".
+    // plugin runs with documentAccess: "dynamic-page". On large files this can
+    // take a few seconds, so keep the UI informed through each phase.
     if (useFile) {
+      status("Loading all pages…");
       await figma.loadAllPagesAsync();
     }
 
     var candidates;
     var mode;
     if (selection.length === 0) {
+      status(useFile ? "Collecting frames across the file…" : "Collecting frames on this page…");
+      // Yield once so the status above paints before the (synchronous) traversal.
+      await delay(0);
       candidates = root.findAll(function(n) {
         return n.type === "FRAME" || n.type === "COMPONENT";
       });
       mode = useFile ? "file" : "page";
     } else {
+      status("Collecting selected frames…");
       candidates = selection.filter(function(n) {
         return n.type === "FRAME" || n.type === "COMPONENT";
       });
       mode = "selection";
     }
+
+    status("Checking " + candidates.length + " frame" + (candidates.length !== 1 ? "s" : "") + "…");
 
     var total = candidates.length;
     figma.ui.postMessage({ type: "scan-start", total: total });

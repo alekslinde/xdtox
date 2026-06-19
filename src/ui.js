@@ -56,6 +56,7 @@ function doFind() {
   document.getElementById('scanCount').textContent = '0 / 0';
   document.getElementById('scanFound').textContent = '0 found';
   document.getElementById('scanFound').className = 'text-stone-500 font-bold';
+  setScanStatus('Preparing…', true);
   showView('viewScanning');
 
   parent.postMessage({ pluginMessage: { type: 'scan', scope: currentScope } }, '*');
@@ -112,7 +113,12 @@ window.onmessage = function(event) {
   var msg = event.data.pluginMessage;
   if (!msg) return;
 
+  if (msg.type === 'scan-status') {
+    setScanStatus(msg.text, true);
+  }
+
   if (msg.type === 'scan-start') {
+    setScanStatus('Scanning ' + msg.total + ' frame' + (msg.total !== 1 ? 's' : '') + '…', true);
     document.getElementById('scanList').innerHTML = '';
     document.getElementById('scanBar').style.width = '0%';
     document.getElementById('scanCount').textContent = '0 / ' + msg.total;
@@ -258,6 +264,16 @@ function escHtml(s) {
 
 function escAttr(s) {
   return String(s).replace(/'/g, '&#39;');
+}
+
+function setScanStatus(text, busy) {
+  var wrap = document.getElementById('scanStatus');
+  var label = document.getElementById('scanStatusText');
+  if (label) label.textContent = text;
+  if (wrap) {
+    var spinner = wrap.querySelector('.spin');
+    if (spinner) spinner.style.visibility = busy ? 'visible' : 'hidden';
+  }
 }
 
 // ── Resize ────────────────────────────────────────────────────────────────────

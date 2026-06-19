@@ -6,17 +6,23 @@ function isClipPathGroup(node) {
   return n === "clip path group" || n === "clip-path group";
 }
 
-function isFrameNameGroup(node, frameName) {
-  if (node.type !== "GROUP") return false;
-  return node.name.toLowerCase().trim() === frameName.toLowerCase().trim();
+// The clip mask node XD leaves behind inside a "Clip path group" is named
+// "clip-<something>". Matching on this prefix alone is robust — unlike matching
+// the content group against the frame name, which Figma mangles on import
+// (slashes → dashes, inserted "-1" markers, " N" dedup suffixes, etc.).
+function isClipMaskNode(node) {
+  return node.name.toLowerCase().trim().indexOf("clip-") === 0;
 }
 
-function isClipMaskNode(node, frameName) {
-  var name = node.name.toLowerCase().trim();
-  if (!name.startsWith("clip-")) return false;
-  var sanitised = frameName.toLowerCase().trim().replace(/\s+/g, "_");
-  var candidate = name.slice(5);
-  return candidate === sanitised || candidate === frameName.toLowerCase().trim().replace(/\s+/g, "-");
+// The content group inside a "Clip path group" is the GROUP child that isn't the
+// clip mask. Identifying it structurally avoids relying on its name matching the
+// (heavily transformed) frame name.
+function innerContentGroup(clipGroup) {
+  for (var i = 0; i < clipGroup.children.length; i++) {
+    var child = clipGroup.children[i];
+    if (child.type === "GROUP" && !isClipMaskNode(child)) return child;
+  }
+  return null;
 }
 
 function looksLikeXDFrame(frame) {
@@ -26,15 +32,7 @@ function looksLikeXDFrame(frame) {
   var clipGroup = frame.children[0];
   if (!isClipPathGroup(clipGroup)) return false;
 
-  var hasInnerGroup = false;
-  for (var i = 0; i < clipGroup.children.length; i++) {
-    if (isFrameNameGroup(clipGroup.children[i], frame.name)) {
-      hasInnerGroup = true;
-      break;
-    }
-  }
-
-  return hasInnerGroup;
+  return innerContentGroup(clipGroup) !== null;
 }
 
 function isBackgroundVector(node, frame) {
@@ -61,15 +59,15 @@ function isBackgroundVector(node, frame) {
 function reviewReasonsForXDFrame(frame) {
   var reasons = [];
   var clipGroup = frame.children[0];
-  var innerGroup = null;
+  var innerGroup = innerContentGroup(clipGroup);
   var hasClipMask = false;
   var unexpectedCount = 0;
 
   for (var i = 0; i < clipGroup.children.length; i++) {
     var child = clipGroup.children[i];
-    if (isFrameNameGroup(child, frame.name)) {
-      innerGroup = child;
-    } else if (isClipMaskNode(child, frame.name)) {
+    if (child === innerGroup) {
+      continue;
+    } else if (isClipMaskNode(child)) {
       hasClipMask = true;
     } else {
       unexpectedCount++;
@@ -91,4 +89,4 @@ function reviewReasonsForXDFrame(frame) {
   return reasons;
 }
 
-module.exports = { isClipPathGroup, isFrameNameGroup, isClipMaskNode, looksLikeXDFrame, isBackgroundVector, reviewReasonsForXDFrame };
+module.exports = { isClipPathGroup, isClipMaskNode, innerContentGroup, looksLikeXDFrame, isBackgroundVector, reviewReasonsForXDFrame };
