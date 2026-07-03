@@ -10,11 +10,20 @@
     "demo": "npm run build && node demo/server.js",
     "server": "node demo/server.js",
     "test": "jest",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "cache-buster": "node scripts/get-cache-buster.js"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.4",
     "esbuild": "^0.28.0",
+    "eslint": "^9.39.4",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.7.0",
     "jest": "^29.7.0",
+    "prettier": "^3.9.4",
     "tailwindcss": "^3.4.0"
   }
 }
