@@ -18,7 +18,6 @@
 //   4. Delete the now-empty "Clip path group"
 
 const {
-  isClipPathGroup,
   isClipMaskNode,
   innerContentGroup,
   looksLikeXDFrame,
