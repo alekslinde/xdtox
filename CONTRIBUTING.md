@@ -78,9 +78,13 @@ npm run lint      # must be error-free
 npm run build     # must succeed
 ```
 
+CI runs exactly these on every pull request, from a clean `npm ci`, so anything
+that depends on your local `node_modules` or on files `.gitignore` excludes will
+fail there even if it passed for you.
+
 Then reload in Figma and test the actual behaviour. The helpers have unit tests;
 the scan and strip operations don't, so manual verification against a real XD
-import is the only real check.
+import is the only real check — CI cannot do it, since it can't run Figma.
 
 ---
 
