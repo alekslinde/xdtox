@@ -55,7 +55,6 @@ xdtox/
 ├── dist/
 │   └── styles.css       Compiled Tailwind output
 ├── manifest.json        Figma plugin manifest
-├── tailwind.config.js   Tailwind configuration
 └── package.json
 ```
 
