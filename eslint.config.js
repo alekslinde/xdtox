@@ -15,7 +15,7 @@ module.exports = [
 
   js.configs.recommended,
 
-  // Root-level config files (this file, tailwind.config.js) run under Node.
+  // Root-level config files (this file) run under Node.
   {
     files: ['*.config.js', '.prettierrc.js'],
     languageOptions: {

@@ -1,6 +1,14 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+/* v4 autodetects content, but scans broadly; scope it explicitly to match the
+   old v3 config's content globs for the src directory. */
+@source "./*.html";
+@source "./*.js";
+
+@theme {
+  --font-mono: "Space Mono", monospace;
+  --font-display: Syne, sans-serif;
+}
 
 /* ── Component classes ────────────────────────────────────────────────────── */
 
@@ -26,7 +34,8 @@
     @apply text-stone-600;
   }
   .scope-btn.active {
-    @apply bg-white text-stone-900 shadow-sm;
+    /* v3's shadow-sm is v4's shadow-xs (the shadow scale was renamed) */
+    @apply bg-white text-stone-900 shadow-xs;
   }
 
   /* Frame list rows */
