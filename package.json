@@ -1,6 +1,6 @@
 {
   "name": "xdtox",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "private": true,
   "scripts": {
     "build:css": "tailwindcss --input src/styles.css --output dist/styles.css --minify",
