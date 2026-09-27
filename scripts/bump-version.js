@@ -11,9 +11,9 @@
 // The plugin has no version field in manifest.json (Figma doesn't use one), so
 // package.json is the single source of truth and the UI footer mirrors it.
 
-const fs           = require('fs');
-const path         = require('path');
-const { execSync } = require('child_process');
+const fs               = require('fs');
+const path             = require('path');
+const { execFileSync } = require('child_process');
 
 const root = path.join(__dirname, '..');
 
@@ -82,7 +82,10 @@ if (fs.existsSync(lockPath)) {
 // users. Both panels carry one, so every occurrence gets rewritten.
 const uiPath  = path.join(root, 'src', 'ui.html');
 const ui      = fs.readFileSync(uiPath, 'utf-8');
-const pattern = new RegExp(`v${current.replace(/\./g, '\\.')}\\b`, 'g');
+// current is already known to match /^\d+\.\d+\.\d+$/, but escape every regex
+// metacharacter rather than just the dots so this can't build a bad pattern if
+// that guarantee ever moves.
+const pattern = new RegExp(`v${current.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'g');
 const found   = (ui.match(pattern) || []).length;
 
 if (found === 0) {
@@ -105,10 +108,14 @@ if (dryRun) {
 }
 
 if (commit) {
+  // execFileSync, not execSync: arguments are passed to git directly rather than
+  // through a shell, so paths containing spaces or shell metacharacters are safe.
   const files = edits.map(([file]) => path.relative(root, file));
-  execSync(`git add ${files.join(' ')}`, { cwd: root, stdio: 'inherit' });
-  execSync(`git commit -m "chore(config): bump version to ${next}"`, { cwd: root, stdio: 'inherit' });
-  execSync(`git tag -a v${next} -m "v${next}"`, { cwd: root, stdio: 'inherit' });
+  const git   = (...args) => execFileSync('git', args, { cwd: root, stdio: 'inherit' });
+
+  git('add', ...files);
+  git('commit', '-m', `chore(config): bump version to ${next}`);
+  git('tag', '-a', `v${next}`, '-m', `v${next}`);
   console.log(`\n✓ Committed and tagged v${next}`);
   console.log(`  Push with: git push && git push origin v${next}`);
 } else {
