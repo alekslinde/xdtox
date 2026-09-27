@@ -49,11 +49,6 @@ xdtox/
 │   ├── helpers.test.js  Jest unit tests for all helper functions
 │   ├── ui.html          UI template (edit this, not the built ui.html)
 │   └── styles.css       Tailwind directives + custom component CSS
-├── demo/
-│   ├── dev.js           Watch mode for local UI preview
-│   ├── server.js        Local dev server (serves demo/index.html)
-│   ├── index.html       Sandboxed UI preview for development
-│   └── mock-data.js     Mock Figma API for testing UI without the plugin
 ├── scripts/
 │   ├── build.js         Inlines compiled CSS and scripts into ui.html
 │   └── get-cache-buster.js  Cache busting utility
@@ -82,8 +77,6 @@ xdtox/
 
 **`src/ui.html`** is the source template (edit this, not the built `ui.html` in the root). It contains `/* INLINE_CSS */` and `/* INLINE_SCRIPT */` placeholders that the build script replaces with compiled CSS and bundled JavaScript.
 
-**`demo/`** provides a sandboxed preview environment for testing UI changes without reloading in Figma. The mock data in `mock-data.js` simulates the Figma API.
-
 ---
 
 ## Development
@@ -107,16 +100,6 @@ Compiles Tailwind and inlines CSS + JavaScript into the plugin UI:
 npm run build
 ```
 
-### Local UI preview
-
-To see UI changes without reloading the plugin repeatedly:
-
-```bash
-npm run dev
-```
-
-This runs a local dev server at `http://localhost:3000` with live CSS recompilation and the mock Figma API. Test interactions against mock data before confirming in Figma.
-
 ### Testing the built plugin
 
 After running `npm run build`:
@@ -139,17 +122,15 @@ Runs Jest on `src/helpers.test.js`. All tests cover the five helper functions ac
 ### Changing the UI layout or styles
 
 1. Edit `src/ui.html` (structure/markup) or `src/styles.css` (styles).
-2. For quick preview: `npm run dev` and test at `http://localhost:3000` against mock data.
-3. When ready: `npm run build` to compile CSS and inline scripts.
-4. In Figma: **Plugins → Development → XDtox → Reload plugin** to test the built version.
+2. Run `npm run build` to compile CSS and inline scripts.
+3. In Figma: **Plugins → Development → XDtox → Reload plugin** to test the built version.
 
 Tailwind utility classes work directly in `src/ui.html`. Custom CSS that can't be expressed as utilities (clip-paths, animations, scrollbar styling) lives in the `@layer components` and `@layer utilities` blocks in `src/styles.css`.
 
 ### Changing UI logic
 
 1. Edit `src/ui.js` (event listeners, message passing, DOM updates).
-2. Test locally: `npm run dev`.
-3. Build and reload in Figma: `npm run build`, then **Reload plugin**.
+2. Build and reload in Figma: `npm run build`, then **Reload plugin**.
 
 ### Changing detection logic
 

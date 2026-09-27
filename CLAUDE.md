@@ -37,9 +37,6 @@ scripts/
   build.js         Bundle + inline + cache-buster pipeline.
   fonts/           Base64 woff2 @font-face generation (self-contained fonts).
   get-cache-buster.js
-demo/
-  dev.js, server.js, index.html, mock-data.js
-                   Local preview harness with a mock Figma API.
 dist/              Build output Figma loads. Generated — do not hand-edit.
 manifest.json      Figma plugin manifest.
 ```
@@ -94,13 +91,13 @@ manifest.json      Figma plugin manifest.
 ## Commands to Know
 
 ```bash
-npm run dev       ← Local UI preview at localhost:3000 (live CSS + mock Figma API)
 npm test          ← Jest on src/helpers.test.js — run before committing
 npm run lint      ← ESLint (flat config). Must be error-free before committing.
 npm run lint:fix  ← ESLint with autofix
 npm run format    ← Prettier --write across the repo
 npm run build     ← Bundle code.js, compile CSS, inline into dist/ui.html
-npm run demo      ← Build then serve the demo
+
+npm run version:patch|minor|major   ← Bump version (package.json + ui.html footers)
 ```
 
 **Linting:** ESLint 9 flat config (`eslint.config.js`) with per-area env

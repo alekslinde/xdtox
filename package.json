@@ -5,16 +5,16 @@
   "scripts": {
     "build:css": "tailwindcss -i src/styles.css -o dist/styles.css --minify",
     "build": "npm run build:css && node scripts/build.js",
-    "dev": "node demo/dev.js",
-    "prod": "npm run build && node demo/server.js",
-    "demo": "npm run build && node demo/server.js",
-    "server": "node demo/server.js",
     "test": "jest",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "cache-buster": "node scripts/get-cache-buster.js"
+    "cache-buster": "node scripts/get-cache-buster.js",
+    "version:bump": "node scripts/bump-version.js",
+    "version:patch": "node scripts/bump-version.js patch",
+    "version:minor": "node scripts/bump-version.js minor",
+    "version:major": "node scripts/bump-version.js major"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
