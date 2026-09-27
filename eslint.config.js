@@ -2,7 +2,7 @@
 //   src/code.js        → Figma plugin sandbox (figma, __html__) + CommonJS
 //   src/ui.js, ui.html → browser (window, document, parent)
 //   src/helpers*.js    → CommonJS + Jest (tests)
-//   scripts/, demo/    → Node
+//   scripts/           → Node
 const js      = require('@eslint/js');
 const globals = require('globals');
 const prettier = require('eslint-config-prettier');
@@ -10,7 +10,8 @@ const prettier = require('eslint-config-prettier');
 module.exports = [
   // ui.html is markup; ESLint has no HTML parser here. Its inline JS mirrors
   // src/ui.js, which IS linted.
-  { ignores: ['dist/', 'node_modules/', 'scripts/fonts/fonts.inline.css', '**/*.html'] },
+  // demo/ is untracked local-only scaffolding; it is not part of the repo.
+  { ignores: ['dist/', 'demo/', 'node_modules/', 'scripts/fonts/fonts.inline.css', '**/*.html'] },
 
   js.configs.recommended,
 
@@ -57,9 +58,9 @@ module.exports = [
     },
   },
 
-  // Build scripts and local demo server
+  // Build scripts
   {
-    files: ['scripts/**/*.js', 'demo/**/*.js'],
+    files: ['scripts/**/*.js'],
     languageOptions: {
       sourceType: 'commonjs',
       globals: { ...globals.node, ...globals.browser },

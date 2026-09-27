@@ -10,15 +10,7 @@ and the goal is to keep it that way — easy to read end to end, easy to verify.
 ```bash
 npm install
 npm test          # Jest on the pure helpers
-npm run dev       # UI preview at localhost:3000 with a mock Figma API
-```
-
-`npm run dev` serves the UI against mock data, so you can iterate on layout and
-logic without Figma. For anything that touches the plugin backend you'll need
-the real thing:
-
-```bash
-npm run build
+npm run build     # bundle, compile CSS, inline into dist/
 ```
 
 Then in Figma: **Plugins → Development → Import plugin from manifest…** and pick
@@ -38,7 +30,6 @@ Reload plugin**.
 | `src/helpers.test.js`| Jest tests for every helper                                    |
 | `src/styles.css`     | Tailwind source plus custom `@layer` CSS                       |
 | `scripts/build.js`   | Bundle + inline + cache-buster pipeline                        |
-| `demo/`              | Local preview harness with a mock Figma API                    |
 | `dist/`              | Build output. **Generated — never hand-edit**                  |
 
 ---
