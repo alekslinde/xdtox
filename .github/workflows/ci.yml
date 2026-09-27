@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel superseded runs on the same ref, so a fresh push doesn't queue behind
+# a run whose result no longer matters.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Lint, test, build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      # `npm ci` (not install) so the lockfile is honoured exactly and a stale
+      # or inconsistent lockfile fails here rather than silently resolving.
+      - run: npm ci
+
+      - run: npm run lint
+
+      - run: npm test
+
+      # dist/ is gitignored, so this builds from nothing every run — it catches
+      # a broken build pipeline, a missing /* INLINE_* */ placeholder, or an
+      # unresolvable import that lint and tests do not cover.
+      - run: npm run build
+
+      # The helpers are the only unit-tested layer, so also assert the bump
+      # script works. --dry-run writes nothing and exits non-zero if the
+      # version labels in src/ui.html have drifted from package.json.
+      - run: npm run version:bump -- patch --dry-run
+
+      # `npm run format:check` is deliberately not run here. Several files
+      # predate Prettier and use a column-aligned style; enforcing it
+      # repo-wide would mean a large reformat rather than a real check.
